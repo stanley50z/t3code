@@ -5,6 +5,7 @@ import {
   resolveInlineCodeFileLinkMeta,
   resolveMarkdownFileLinkMeta,
   rewriteMarkdownFileUriHref,
+  shouldOpenMarkdownFileLinkInBrowserByDefault,
 } from "./markdown-links";
 import {
   markdownFileCopyPaths,
@@ -40,6 +41,17 @@ describe("isLocalEditorFileHref", () => {
     ]) {
       expect(isLocalEditorFileHref(href), href).toBe(false);
     }
+  });
+});
+
+describe("shouldOpenMarkdownFileLinkInBrowserByDefault", () => {
+  it("opens HTML and PDFs in the browser while source files open in the file viewer", () => {
+    expect(shouldOpenMarkdownFileLinkInBrowserByDefault("report.pdf")).toBe(true);
+    expect(shouldOpenMarkdownFileLinkInBrowserByDefault("report.PDF?download=1")).toBe(true);
+    expect(shouldOpenMarkdownFileLinkInBrowserByDefault("report.html")).toBe(true);
+    expect(shouldOpenMarkdownFileLinkInBrowserByDefault("report.HTM#example")).toBe(true);
+    expect(shouldOpenMarkdownFileLinkInBrowserByDefault("report.html.ts")).toBe(false);
+    expect(shouldOpenMarkdownFileLinkInBrowserByDefault("report.xml")).toBe(false);
   });
 });
 
