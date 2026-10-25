@@ -753,7 +753,8 @@ function useChatMarkdownState(
   const openInEditor = useAtomCommand(shellEnvironment.openInEditor, {
     reportFailure: false,
   });
-  const revealFileInFileManager = (filePath: string) => {
+  // reveal: false hands the file to the host's file manager, which opens it in its default app.
+  const revealFileInFileManager = (filePath: string, reveal = true) => {
     if (environmentId === null) {
       return Promise.resolve(
         AsyncResult.failure<void, PreferredEditorEnvironmentRequiredError>(
@@ -770,7 +771,7 @@ function useChatMarkdownState(
     }
     return openInEditor({
       environmentId,
-      input: { cwd: filePath, editor: "file-manager", reveal: true },
+      input: { cwd: filePath, editor: "file-manager", reveal },
     });
   };
   const diffThemeName = resolveDiffThemeName(resolvedTheme);
@@ -1082,6 +1083,11 @@ function useChatMarkdownState(
                   cwd,
                   resolveHostPath().then(({ absolutePath }) => absolutePath),
                 )
+            : undefined
+        }
+        onOpenInDefaultApp={
+          canUseShellActions && revealInFileManagerLabel !== undefined
+            ? async () => revealFileInFileManager((await resolveHostPath()).absolutePath, false)
             : undefined
         }
         onOpenInBrowser={
