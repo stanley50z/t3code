@@ -5,6 +5,7 @@ import { shouldUseMarkdownFileBrowserPrimaryAction } from "./MarkdownFileLink.lo
 it("opens PDFs in the file panel and uses the browser only when no other destination exists", () => {
   expect(
     shouldUseMarkdownFileBrowserPrimaryAction({
+      iconPath: "report.pdf",
       canOpenInEditor: true,
       canOpenInBrowser: true,
       canOpenInPanel: true,
@@ -12,6 +13,7 @@ it("opens PDFs in the file panel and uses the browser only when no other destina
   ).toBe(false);
   expect(
     shouldUseMarkdownFileBrowserPrimaryAction({
+      iconPath: "report.pdf",
       canOpenInEditor: false,
       canOpenInBrowser: true,
       canOpenInPanel: true,
@@ -19,6 +21,7 @@ it("opens PDFs in the file panel and uses the browser only when no other destina
   ).toBe(false);
   expect(
     shouldUseMarkdownFileBrowserPrimaryAction({
+      iconPath: "report.pdf",
       canOpenInEditor: false,
       canOpenInBrowser: true,
       canOpenInPanel: false,

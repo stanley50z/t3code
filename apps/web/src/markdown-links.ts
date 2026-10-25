@@ -30,6 +30,10 @@ export function shouldOpenMarkdownFileLinkInEditor(
   return isTerminalLinkActivation(event, platform);
 }
 
+export function shouldOpenMarkdownFileLinkInBrowserByDefault(path: string): boolean {
+  return /\.html?$/i.test(path.split(/[?#]/, 1)[0] ?? "");
+}
+
 export function rewriteMarkdownFileUriHref(href: string | undefined): string | null {
   if (!href) return null;
   const target = parseFileUrlHref(normalizeMarkdownLinkDestination(href));

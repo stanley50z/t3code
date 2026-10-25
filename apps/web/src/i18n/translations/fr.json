@@ -12197,5 +12197,17 @@
   "faa3bb26abb39c93": "Échec du guide de revue",
   "b7df38b7d8792d78": "Ouvrir le guide",
   "9e91e9a77b664e4e": "Impossible de démarrer un guide de revue",
-  "5a76422e347c98d4": "Ouvrir dans l'application par défaut"
+  "5a76422e347c98d4": "Ouvrir dans l'application par défaut",
+  "31ddd96826a9cd62": "L'environnement n'est pas connecté ou l'accès aux fichiers n'est pas disponible.",
+  "3349341cde00740e": "L'espace de travail n'est pas disponible.",
+  "8264254f222aafcb": "L'environnement a renvoyé une URL de navigateur non valide.",
+  "778edc3b390330db": "L'accès aux fichiers n'est pas disponible.",
+  "806ce65b5b44f02a": "Le navigateur T3 n'est pas disponible.",
+  "4a31269c3888e56f": "Autorisez les fenêtres pop-up pour ouvrir ce fichier dans un onglet du navigateur.",
+  "1d20196da4e611e8": "URL du navigateur copiée",
+  "31684d116266bc97": "Impossible d'ouvrir le navigateur.",
+  "37cc871c923859c5": "Impossible de copier l'URL du navigateur",
+  "726f583674a6068c": "Impossible d'ouvrir le fichier HTML",
+  "29a6abf46e347631": "Copier l'URL du navigateur",
+  "9908045b162ec60f": "Ouvrir dans le navigateur T3"
 }

@@ -48,6 +48,8 @@ interface MarkdownFileLinkProps {
   resolveCopyPaths: () => Promise<ReturnType<typeof markdownFileCopyPaths>>;
   openInEditorMenuLabel: string;
   onOpenInBrowser?: (() => Promise<AtomCommandResult<unknown, unknown>>) | undefined;
+  onOpenExternalBrowser?: (() => void) | undefined;
+  onCopyBrowserUrl?: (() => void) | undefined;
   onOpenMedia?: (() => void) | undefined;
   onReveal?: (() => Promise<AtomCommandResult<unknown, unknown>>) | undefined;
   revealLabel?: string | undefined;
@@ -73,6 +75,8 @@ export const MarkdownFileLink = memo(function MarkdownFileLink({
   onOpenInPanel,
   openInEditorMenuLabel,
   onOpenInBrowser,
+  onOpenExternalBrowser,
+  onCopyBrowserUrl,
   onOpenMedia,
   onReveal,
   revealLabel,
@@ -303,6 +307,12 @@ export const MarkdownFileLink = memo(function MarkdownFileLink({
           ...(onOpenInBrowser
             ? ([{ id: "open-in-browser", label: gt("Open in integrated browser") }] as const)
             : []),
+          ...(onOpenExternalBrowser
+            ? ([{ id: "open-external-browser", label: gt("Open in browser") }] as const)
+            : []),
+          ...(onCopyBrowserUrl
+            ? ([{ id: "copy-browser-url", label: gt("Copy browser URL") }] as const)
+            : []),
           ...(onOpenInDefaultApp
             ? ([{ id: "open-in-default-app", label: gt("Open in default app") }] as const)
             : []),
@@ -323,6 +333,14 @@ export const MarkdownFileLink = memo(function MarkdownFileLink({
       }
       if (clicked === "open-in-browser") {
         handleOpenInBrowser();
+        return;
+      }
+      if (clicked === "open-external-browser") {
+        onOpenExternalBrowser?.();
+        return;
+      }
+      if (clicked === "copy-browser-url") {
+        onCopyBrowserUrl?.();
         return;
       }
       if (clicked === "open-in-default-app") {
@@ -372,11 +390,14 @@ export const MarkdownFileLink = memo(function MarkdownFileLink({
     canOpenInPanel,
     canOpenMedia: onOpenMedia !== undefined,
   });
-  const useBrowserPrimaryAction = shouldUseMarkdownFileBrowserPrimaryAction({
-    canOpenInEditor,
-    canOpenInBrowser,
-    canOpenInPanel,
-  });
+  const useBrowserPrimaryAction =
+    line === undefined &&
+    shouldUseMarkdownFileBrowserPrimaryAction({
+      iconPath,
+      canOpenInEditor,
+      canOpenInBrowser,
+      canOpenInPanel,
+    });
   const chipKind = documentChipKindForFileName(iconPath) ?? "mention";
 
   return (
@@ -394,6 +415,10 @@ export const MarkdownFileLink = memo(function MarkdownFileLink({
               onClick={(event) => {
                 event.preventDefault();
                 event.stopPropagation();
+                if (onOpenExternalBrowser && (event.ctrlKey || event.metaKey)) {
+                  onOpenExternalBrowser();
+                  return;
+                }
                 if (onOpen && shouldOpenMarkdownFileLinkInEditor(event)) {
                   handleOpenInEditor();
                   return;
@@ -474,6 +499,8 @@ function areMarkdownFileLinkPropsEqual(
     previous.onOpenInPanel === next.onOpenInPanel &&
     previous.openInEditorMenuLabel === next.openInEditorMenuLabel &&
     previous.onOpenInBrowser === next.onOpenInBrowser &&
+    previous.onOpenExternalBrowser === next.onOpenExternalBrowser &&
+    previous.onCopyBrowserUrl === next.onCopyBrowserUrl &&
     previous.onOpenMedia === next.onOpenMedia &&
     previous.onReveal === next.onReveal &&
     previous.resolveCopyPaths === next.resolveCopyPaths &&

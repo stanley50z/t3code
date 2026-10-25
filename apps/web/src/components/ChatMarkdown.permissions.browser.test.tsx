@@ -26,6 +26,17 @@ const state = vi.hoisted(() => ({
   openExternal: vi.fn(),
   copy: vi.fn(),
   pullRequests: [] as ThreadPullRequestLink[],
+  browserEnabled: false,
+  browserActivate: vi.fn(),
+}));
+
+vi.mock(import("../browser/useBrowserFileActions"), async (original) => ({
+  ...(await original()),
+  useBrowserFileActions: (() => ({
+    canOpen: state.browserEnabled,
+    canOpenIntegrated: state.browserEnabled,
+    activate: state.browserActivate,
+  })) as never,
 }));
 
 vi.mock(import("../state/use-atom-query-runner"), async (original) => ({
@@ -130,6 +141,8 @@ const serverConfig = {
 function setup() {
   using stack = new DisposableStack();
   state.allowed = true;
+  state.browserEnabled = false;
+  state.browserActivate.mockReset().mockResolvedValue(undefined);
   state.listeners.clear();
   state.pullRequests = [];
   state.openEditor.mockReset().mockResolvedValue(AsyncResult.success(undefined));
@@ -341,4 +354,34 @@ it("preserves keyboard activation of a file-options button", async () => {
   }
   await userEvent.click(button);
   await vi.waitFor(() => expect(state.choose.mock.lastCall?.[2]).toBe("mouse"));
+});
+
+it.each([
+  { ctrlKey: true, metaKey: false },
+  { ctrlKey: false, metaKey: true },
+])("opens an HTML chip in the system browser on a modifier click (%j)", async (modifiers) => {
+  using _setup = setup();
+  state.browserEnabled = true;
+  await using screen = await renderMarkdown("[Report](report.html)");
+  await act(async () => {
+    screen
+      .anchor()
+      .dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, ...modifiers }));
+  });
+  expect(state.browserActivate).toHaveBeenCalledExactlyOnceWith("/work/report.html", "external");
+  expect(state.openEditor).not.toHaveBeenCalled();
+});
+
+it("offers the system browser and its URL for an HTML chip", async () => {
+  using _setup = setup();
+  state.browserEnabled = true;
+  state.choose.mockResolvedValue("open-external-browser");
+  await using screen = await renderMarkdown("[Report](report.html)");
+  await screen.openContextMenu();
+  expect(offeredActions()).toEqual(
+    expect.arrayContaining(["open-external-browser", "copy-browser-url"]),
+  );
+  await vi.waitFor(() =>
+    expect(state.browserActivate).toHaveBeenCalledWith("/work/report.html", "external"),
+  );
 });

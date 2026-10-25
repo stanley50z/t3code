@@ -12197,5 +12197,17 @@
   "faa3bb26abb39c93": "Review-Leitfaden fehlgeschlagen",
   "b7df38b7d8792d78": "Leitfaden öffnen",
   "9e91e9a77b664e4e": "Review-Leitfaden konnte nicht gestartet werden",
-  "5a76422e347c98d4": "In Standard-App öffnen"
+  "5a76422e347c98d4": "In Standard-App öffnen",
+  "31ddd96826a9cd62": "Die Umgebung ist nicht verbunden oder der Dateizugriff ist nicht verfügbar.",
+  "3349341cde00740e": "Arbeitsbereich ist nicht verfügbar.",
+  "8264254f222aafcb": "Die Umgebung hat eine ungültige Browser-URL zurückgegeben.",
+  "778edc3b390330db": "Dateizugriff ist nicht verfügbar.",
+  "806ce65b5b44f02a": "Der T3-Browser ist nicht verfügbar.",
+  "4a31269c3888e56f": "Erlaube Pop-ups, um diese Datei in einem Browser-Tab zu öffnen.",
+  "1d20196da4e611e8": "Browser-URL kopiert",
+  "31684d116266bc97": "Browser kann nicht geöffnet werden.",
+  "37cc871c923859c5": "Browser-URL kann nicht kopiert werden",
+  "726f583674a6068c": "HTML-Datei kann nicht geöffnet werden",
+  "29a6abf46e347631": "Browser-URL kopieren",
+  "9908045b162ec60f": "Im T3-Browser öffnen"
 }

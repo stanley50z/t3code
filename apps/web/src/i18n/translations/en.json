@@ -12206,5 +12206,17 @@
   "faa3bb26abb39c93": "Review guide failed",
   "b7df38b7d8792d78": "Open guide",
   "9e91e9a77b664e4e": "Could not start a review guide",
-  "5a76422e347c98d4": "Open in default app"
+  "5a76422e347c98d4": "Open in default app",
+  "31ddd96826a9cd62": "Environment is not connected or file access is unavailable.",
+  "3349341cde00740e": "Workspace is unavailable.",
+  "8264254f222aafcb": "The environment returned an invalid browser URL.",
+  "778edc3b390330db": "File access is unavailable.",
+  "806ce65b5b44f02a": "The T3 browser is unavailable.",
+  "4a31269c3888e56f": "Allow pop-ups to open this file in a browser tab.",
+  "1d20196da4e611e8": "Browser URL copied",
+  "31684d116266bc97": "Unable to open browser.",
+  "37cc871c923859c5": "Unable to copy browser URL",
+  "726f583674a6068c": "Unable to open HTML file",
+  "29a6abf46e347631": "Copy browser URL",
+  "9908045b162ec60f": "Open in T3 browser"
 }
