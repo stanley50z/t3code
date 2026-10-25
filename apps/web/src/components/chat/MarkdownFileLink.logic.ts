@@ -4,7 +4,10 @@ import { msg } from "gt-react";
 
 import { m } from "../../i18n/messages";
 
-import type { MarkdownFileLinkMeta } from "../../markdown-links";
+import {
+  shouldOpenMarkdownFileLinkInBrowserByDefault,
+  type MarkdownFileLinkMeta,
+} from "../../markdown-links";
 import type { RemoteOpenMode } from "../../remoteOpen";
 
 export function canUseMarkdownFileShellActions(
@@ -54,9 +57,14 @@ export function markdownFileCopyMenuItems({
 }
 
 export function shouldUseMarkdownFileBrowserPrimaryAction(input: {
+  iconPath: string;
   canOpenInEditor: boolean;
   canOpenInBrowser: boolean;
   canOpenInPanel: boolean;
 }): boolean {
-  return input.canOpenInBrowser && !input.canOpenInEditor && !input.canOpenInPanel;
+  return (
+    input.canOpenInBrowser &&
+    (shouldOpenMarkdownFileLinkInBrowserByDefault(input.iconPath) ||
+      (!input.canOpenInEditor && !input.canOpenInPanel))
+  );
 }

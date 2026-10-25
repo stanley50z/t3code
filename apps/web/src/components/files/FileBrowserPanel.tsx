@@ -6,7 +6,12 @@ import type {
   ContextMenuItem as TreeContextMenuItem,
   ContextMenuOpenContext as TreeContextMenuOpenContext,
 } from "@pierre/trees";
-import type { ContextMenuSource, EnvironmentId, ProjectEntry } from "@t3tools/contracts";
+import type {
+  ContextMenuSource,
+  EnvironmentId,
+  ProjectEntry,
+  ScopedThreadRef,
+} from "@t3tools/contracts";
 import { FileTree, useFileTree, useFileTreeSearch, useFileTreeSelector } from "@pierre/trees/react";
 import { settlePromise } from "@t3tools/client-runtime/state/runtime";
 import { serializeComposerFileLink } from "@t3tools/shared/composerTrigger";
@@ -25,6 +30,7 @@ import { useStableCallback } from "~/hooks/useStableCallback";
 import { useTheme } from "~/hooks/useTheme";
 import { useWorkspaceMutationRefresh } from "~/hooks/useWorkspaceMutationRefresh";
 import { useFileContextMenu, type FileContextMenuAction } from "~/fileContextMenu";
+import { isHtmlFile, useBrowserFileActions } from "~/browser/useBrowserFileActions";
 import { readLocalApi } from "~/localApi";
 import { T3_PIERRE_ICONS } from "~/pierre-icons";
 import {
@@ -54,6 +60,7 @@ import { SharedTooltipTrigger } from "~/components/ui/shared-tooltip";
 
 interface FileBrowserPanelProps {
   environmentId: EnvironmentId;
+  threadRef?: ScopedThreadRef | undefined;
   cwd: string;
   projectName: string;
   selectedPath: string | null;
@@ -170,6 +177,7 @@ const MAX_FOLDERS_OPENED_WITH_PARENT = 16;
 
 export default function FileBrowserPanel({
   environmentId,
+  threadRef,
   cwd,
   projectName,
   selectedPath,
@@ -188,6 +196,8 @@ export default function FileBrowserPanel({
   const composerRef = useComposerHandleContext();
   const fileContextMenu = useFileContextMenu(environmentId);
   const downloadFile = useFileDownload(environmentId);
+  // Host folders sit outside the thread's workspace, which its asset URLs cannot sign for.
+  const browserFiles = useBrowserFileActions(hostFolder ? null : environmentId, cwd, threadRef);
   const {
     entries: directoryEntries,
     load,
@@ -249,9 +259,19 @@ export default function FileBrowserPanel({
       const fileMenuItems = fileContextMenu.buildItems(fileTarget);
       // The app menu owns focus; the tree's outside-click handler would dismiss it before click.
       context.close({ restoreFocus: !pointerIsFresh });
+      const isHtml = entryKinds.get(relativePath) === "file" && isHtmlFile(relativePath);
       void settlePromise(async () => {
         const clicked = await api.contextMenu.show(
           [
+            ...(isHtml && browserFiles.canOpenIntegrated
+              ? [{ id: "open-integrated", label: gt("Open in T3 browser") }]
+              : []),
+            ...(isHtml && browserFiles.canOpen
+              ? [
+                  { id: "open-browser", label: gt("Open in browser") },
+                  { id: "copy-browser-url", label: gt("Copy browser URL") },
+                ]
+              : []),
             ...fileMenuItems,
             ...(downloadFile && item.kind !== "directory"
               ? [{ id: "download", label: gt("Download", { $context: "verb, saves a file" }) }]
@@ -264,6 +284,21 @@ export default function FileBrowserPanel({
           pointerIsFresh ? pointer.source : undefined,
         );
         if (clicked === null) return;
+        if (
+          clicked === "open-integrated" ||
+          clicked === "open-browser" ||
+          clicked === "copy-browser-url"
+        ) {
+          await browserFiles.activate(
+            relativePath,
+            clicked === "open-integrated"
+              ? "integrated"
+              : clicked === "open-browser"
+                ? "external"
+                : "copy",
+          );
+          return;
+        }
         // Open-with submenu ids are absent from the top-level item list.
         const isFileMenuAction =
           fileMenuItems.some((entry) => entry.id === clicked) || clicked.startsWith("editor:");
@@ -343,7 +378,11 @@ export default function FileBrowserPanel({
       const selectedPath = selectedPaths.at(-1)?.replace(/\/$/, "");
       if (selectedPath && entryKindsRef.current.get(selectedPath) === "file") {
         treeSelectionPathRef.current = selectedPath;
-        onOpenFile(panelPath(selectedPath));
+        if (isHtmlFile(selectedPath) && browserFiles.canOpenIntegrated) {
+          void browserFiles.activate(selectedPath, "integrated");
+        } else {
+          onOpenFile(panelPath(selectedPath));
+        }
       }
     },
     paths: [],
@@ -728,20 +767,27 @@ export default function FileBrowserPanel({
       ) : (
         <FileTree
           model={model}
-          aria-label={gt("{projectName} files", { projectName })}
-          className="min-h-0 flex-1 overflow-hidden"
           onClickCapture={(event) => {
+            if (event.button !== 0 || event.shiftKey || event.altKey) return;
+            const htmlPath = event.nativeEvent
+              .composedPath()
+              .find(
+                (node): node is HTMLElement =>
+                  node instanceof HTMLElement && node.dataset.itemPath !== undefined,
+              )?.dataset.itemPath;
+            const external = event.ctrlKey || event.metaKey;
             if (
-              event.defaultPrevented ||
-              event.button !== 0 ||
-              event.ctrlKey ||
-              event.metaKey ||
-              event.shiftKey ||
-              event.altKey ||
-              dragMention.isDragInProgress()
+              htmlPath &&
+              entryKinds.get(htmlPath) === "file" &&
+              isHtmlFile(htmlPath) &&
+              (external ? browserFiles.canOpen : browserFiles.canOpenIntegrated)
             ) {
+              event.preventDefault();
+              event.stopPropagation();
+              void browserFiles.activate(htmlPath, external ? "external" : "integrated");
               return;
             }
+            if (event.defaultPrevented || external || dragMention.isDragInProgress()) return;
             // Pierre emits no change for its sole selected row; read before the click to avoid double opens.
             const selected = model.getSelectedPaths();
             const path = selected.length === 1 ? selected[0] : undefined;
@@ -756,6 +802,8 @@ export default function FileBrowserPanel({
             treeSelectionPathRef.current = path;
             onOpenFile(panelPath(path));
           }}
+          aria-label={gt("{projectName} files", { projectName })}
+          className="min-h-0 flex-1 overflow-hidden"
           style={pierreTreeStyle(resolvedTheme)}
           onPointerOver={titleClippedPierreTreeRow}
         />

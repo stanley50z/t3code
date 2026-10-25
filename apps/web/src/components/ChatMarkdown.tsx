@@ -185,6 +185,7 @@ import { sourceControlClients } from "@t3tools/client-runtime/source-control-cli
 import { useOpenChangeRequestLink } from "~/lib/openPullRequestLink";
 import { textDirection } from "~/textDirection";
 import { useOpenLink } from "../browser/useOpenLink";
+import { isHtmlFile, useBrowserFileActions } from "../browser/useBrowserFileActions";
 import { writeTextToClipboard } from "../hooks/useCopyToClipboard";
 import { isPreviewAvailableFor } from "../browser/previewRuntime";
 import {
@@ -660,6 +661,7 @@ function useChatMarkdownState(
   const canUseShellActions =
     canOperateHost &&
     canUseMarkdownFileShellActions(environmentId, remoteOpen.state.mode, remoteOpen.isResolved);
+  const browserFiles = useBrowserFileActions(environmentId, cwd, threadRef);
   const openMarkdownMedia = (
     source: string,
     resolvedFilePath?: string,
@@ -1088,6 +1090,16 @@ function useChatMarkdownState(
         onOpenInDefaultApp={
           canUseShellActions && revealInFileManagerLabel !== undefined
             ? async () => revealFileInFileManager((await resolveHostPath()).absolutePath, false)
+            : undefined
+        }
+        onOpenExternalBrowser={
+          isHtmlFile(fileLinkMeta.filePath) && browserFiles.canOpen
+            ? () => void browserFiles.activate(fileLinkMeta.filePath, "external")
+            : undefined
+        }
+        onCopyBrowserUrl={
+          isHtmlFile(fileLinkMeta.filePath) && browserFiles.canOpen
+            ? () => void browserFiles.activate(fileLinkMeta.filePath, "copy")
             : undefined
         }
         onOpenInBrowser={

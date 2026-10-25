@@ -13039,5 +13039,17 @@
   "4a12506938295127": "Introduce primero {field}.",
   "5807c08e225c6b3d": "Descargar",
   "0d50b5bfe7151ece": "No se pudo descargar el archivo",
-  "5a76422e347c98d4": "Abrir en la aplicación predeterminada"
+  "5a76422e347c98d4": "Abrir en la aplicación predeterminada",
+  "31ddd96826a9cd62": "El entorno no está conectado o el acceso a archivos no está disponible.",
+  "3349341cde00740e": "El espacio de trabajo no está disponible.",
+  "8264254f222aafcb": "El entorno devolvió una URL de navegador no válida.",
+  "778edc3b390330db": "El acceso a archivos no está disponible.",
+  "806ce65b5b44f02a": "El navegador de T3 no está disponible.",
+  "4a31269c3888e56f": "Permite las ventanas emergentes para abrir este archivo en una pestaña del navegador.",
+  "1d20196da4e611e8": "URL del navegador copiada",
+  "31684d116266bc97": "No se puede abrir el navegador.",
+  "37cc871c923859c5": "No se puede copiar la URL del navegador",
+  "726f583674a6068c": "No se puede abrir el archivo HTML",
+  "29a6abf46e347631": "Copiar URL del navegador",
+  "9908045b162ec60f": "Abrir en el navegador de T3"
 }

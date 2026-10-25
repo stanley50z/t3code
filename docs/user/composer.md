@@ -174,4 +174,6 @@ Following an agent's file link to a file outside the workspace opens it read-onl
 
 ## HTML and PDF files in the file viewer
 
+On web and desktop, clicking an HTML file in Files or an HTML file link in chat opens it in T3's browser. Ctrl+click (Cmd+click on macOS) opens it in your normal browser instead (a new tab on web). Right-click the file or link to choose a browser or copy its browser URL. A chat link to a specific line still opens the source in the file viewer.
+
 On web and desktop, HTML and PDF files open rendered (HTML previews are sandboxed from your T3 Code session; line-specific HTML links open source view). On mobile, PDFs open in the native iOS viewer or an installed Android viewer.
