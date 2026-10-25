@@ -1518,6 +1518,7 @@ export default function FilePreviewPanel({
             <FileBrowserPanel
               key={`${environmentId}:${hostFolderPath ?? cwd}`}
               environmentId={environmentId}
+              threadRef={draft ? undefined : threadRef}
               cwd={hostFolderPath ?? cwd}
               projectName={hostFolderPath ?? projectName}
               hostFolder={hostFolderPath !== null}
