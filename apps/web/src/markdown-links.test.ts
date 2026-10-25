@@ -4,12 +4,24 @@ import {
   resolveInlineCodeFileLinkMeta,
   resolveMarkdownFileLinkMeta,
   rewriteMarkdownFileUriHref,
+  shouldOpenMarkdownFileLinkInBrowserByDefault,
 } from "./markdown-links";
 import {
   markdownFileCopyPaths,
   markdownFileEditorTarget,
   resolveMarkdownFileHostPath,
 } from "./markdownFileHostPath";
+
+describe("shouldOpenMarkdownFileLinkInBrowserByDefault", () => {
+  it("opens HTML and PDFs in the browser while source files open in the file viewer", () => {
+    expect(shouldOpenMarkdownFileLinkInBrowserByDefault("report.pdf")).toBe(true);
+    expect(shouldOpenMarkdownFileLinkInBrowserByDefault("report.PDF?download=1")).toBe(true);
+    expect(shouldOpenMarkdownFileLinkInBrowserByDefault("report.html")).toBe(true);
+    expect(shouldOpenMarkdownFileLinkInBrowserByDefault("report.HTM#example")).toBe(true);
+    expect(shouldOpenMarkdownFileLinkInBrowserByDefault("report.html.ts")).toBe(false);
+    expect(shouldOpenMarkdownFileLinkInBrowserByDefault("report.xml")).toBe(false);
+  });
+});
 
 describe("rewriteMarkdownFileUriHref", () => {
   it("preserves encoded octets so file paths are decoded only once later", () => {
