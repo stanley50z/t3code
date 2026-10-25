@@ -181,6 +181,13 @@ export const MuseSubscriptionUsage = Schema.Struct({
   }),
 });
 export type MuseSubscriptionUsage = typeof MuseSubscriptionUsage.Type;
+/** Experimental `account/read` result: the credential lane in effect and, for a login, its account. */
+export const MuseAccountState = Schema.Struct({
+  state: Schema.String,
+  label: Schema.optional(Schema.String),
+  credentialRequired: Schema.optional(Schema.Boolean),
+});
+export type MuseAccountState = typeof MuseAccountState.Type;
 export const MuseTurnRetryScheduled = Schema.Struct({
   turnId: NonEmptyString,
   nextAttempt: Schema.Int.check(Schema.isGreaterThan(0)),

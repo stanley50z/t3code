@@ -200,6 +200,7 @@ export const makeManagedServerProvider = Effect.fn("makeManagedServerProvider")(
           previous: state.snapshot.usageLimits,
           update,
           checkedAt: update.checkedAt,
+          ...(update.replace ? { replace: true } : {}),
         });
         if (usageLimits === state.snapshot.usageLimits) {
           return [null, state] as const;

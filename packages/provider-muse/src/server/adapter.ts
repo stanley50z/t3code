@@ -200,6 +200,16 @@ export interface MuseAdapterV2Options {
       request: ProviderContinuationRequests.ProviderContinuationRequest,
     ) => Effect.Effect<void>;
   };
+  /**
+   * Receives each subscription usage report (`usage/changed`) from this adapter's hosts,
+   * with the account generation the reporting host started under.
+   */
+  readonly onSubscriptionUsage?: (
+    usage: MuseSubscriptionUsage,
+    accountGeneration: number,
+  ) => Effect.Effect<void>;
+  /** The instance's account generation, read as each host starts, since reports name no account. */
+  readonly usageAccountGeneration?: Effect.Effect<number>;
 }
 
 interface ActiveTurn {
@@ -321,6 +331,8 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
       const eventPermit = yield* Semaphore.make(1);
       let host: MuseSdkHost;
       let hostEpoch = 0;
+      // The account generation the current host started under; see usageAccountGeneration.
+      let hostAccountGeneration = 0;
       let closed = false;
       let broken = false;
       // Only idle host failures can be retried on this runtime.
@@ -1294,7 +1306,10 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
         const params = yield* decode(recordSchema, data);
         // usage/changed is account-wide and carries no session ID.
         if (method === "usage/changed") {
-          latestSubscriptionUsage = yield* decode(MuseSubscriptionUsage, params);
+          const usage = yield* decode(MuseSubscriptionUsage, params);
+          latestSubscriptionUsage = usage;
+          if (options.onSubscriptionUsage)
+            yield* options.onSubscriptionUsage(usage, hostAccountGeneration);
           return;
         }
         if (params.sessionId !== nativeSessionId) return;
@@ -1662,6 +1677,9 @@ export const makeMuseAdapterV2 = Effect.fn("makeMuseAdapterV2")(function* (
       );
       const launchHost = Effect.fnUntraced(function* () {
         const epoch = ++hostEpoch;
+        hostAccountGeneration = options.usageAccountGeneration
+          ? yield* options.usageAccountGeneration
+          : 0;
         const mcpSession = yield* mcpSessions.read(input.threadId);
         const environment = McpProviderSession.withAgentDeviceEnvironment(
           options.environment,

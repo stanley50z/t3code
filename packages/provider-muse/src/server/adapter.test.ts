@@ -205,7 +205,12 @@ const makeHarness = Effect.fnUntraced(function* (
   policy = runtimePolicy,
   overrides: Pick<
     MuseAdapterV2Options,
-    "createHost" | "nativeEventLogger" | "modelCatalog" | "continuationRequests"
+    | "createHost"
+    | "nativeEventLogger"
+    | "modelCatalog"
+    | "continuationRequests"
+    | "onSubscriptionUsage"
+    | "usageAccountGeneration"
   > = {},
 ) {
   let hostCount = 0;
@@ -665,6 +670,42 @@ describe("MuseAdapterV2", () => {
       const terminal = yield* harness.takeEvent("turn.terminal");
       assert.strictEqual(terminal.failure?.class, "usage_limit");
       assert.isUndefined(terminal.failure?.resetAt);
+      assert.strictEqual(fake.closeCount(), 0);
+    }).pipe(Effect.scoped, Effect.provide(testLayer)),
+  );
+
+  it.effect("hands Meta's subscription usage to the instance, with or without a turn", () =>
+    Effect.gen(function* () {
+      const fake = yield* makeFakeMuse();
+      const reports: Array<readonly [MuseSubscriptionUsage, number]> = [];
+      let generation = 3;
+      const harness = yield* makeHarness(
+        fake,
+        INSTANCE_ID,
+        undefined,
+        undefined,
+        undefined,
+        runtimePolicy,
+        {
+          onSubscriptionUsage: (usage, accountGeneration) =>
+            Effect.sync(() => void reports.push([usage, accountGeneration])),
+          usageAccountGeneration: Effect.sync(() => generation),
+        },
+      );
+      // A report counts for the generation its host started under, not the current one.
+      generation = 4;
+      yield* fake.emitHostWide("usage/changed", SUBSCRIPTION_USAGE);
+      yield* fake.emitHostWide("usage/changed", { window: "not usage" });
+      // A reset no Date can hold would throw once formatted, so the report is skipped too.
+      yield* fake.emitHostWide("usage/changed", {
+        ...SUBSCRIPTION_USAGE,
+        weekly: { usedPercent: 5, resetsAtMs: 1e16 },
+      });
+      const { nativeId } = yield* startConversation(harness, fake);
+      yield* fake.emit("turn/completed", { turnId: nativeId, terminal: "completed" });
+      const terminal = yield* harness.takeEvent("turn.terminal");
+      assert.strictEqual(terminal.status, "completed");
+      assert.deepStrictEqual(reports, [[SUBSCRIPTION_USAGE, 3]]);
       assert.strictEqual(fake.closeCount(), 0);
     }).pipe(Effect.scoped, Effect.provide(testLayer)),
   );
