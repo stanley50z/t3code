@@ -13057,5 +13057,13 @@
   "726f583674a6068c": "Não foi possível abrir o arquivo HTML",
   "29a6abf46e347631": "Copiar URL do navegador",
   "9908045b162ec60f": "Abrir no navegador do T3",
-  "7240fae7f40fdaff": "Importar do t3.json"
+  "7240fae7f40fdaff": "Importar do t3.json",
+  "c73dbf9420db3bbb": "Frases rápidas",
+  "35d9d0d9d584e99b": "Frases rápidas para citações",
+  "cf0dae1a7a469f5a": "Botões acima do editor que enviam uma frase com um clique. Uma frase por linha.",
+  "a55a3fe6921cf01b": "Redefinir frases rápidas para o padrão",
+  "63ee4677663627db": "Botões na caixa de comentário de uma resposta citada que salvam a frase como comentário. Uma frase por linha.",
+  "e6399279e40f051c": "Redefinir frases rápidas para citações para o padrão",
+  "75e71adec12e50ad": "botões um clique enviar resposta pronta modelo prompt trecho editor buttons",
+  "ab44cdea5ef13464": "citação resposta comentário botões um clique pronto modelo citation quote"
 }

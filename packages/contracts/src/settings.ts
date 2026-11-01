@@ -413,6 +413,11 @@ export const VoiceTranscriptionDestination = Schema.Union([
 ]);
 export type VoiceTranscriptionDestination = typeof VoiceTranscriptionDestination.Type;
 
+// Composer phrases send on click; citation phrases save as a quote's comment.
+export const QuickPhrases = Schema.Array(Schema.String);
+const DEFAULT_COMPOSER_QUICK_PHRASES: ReadonlyArray<string> = ["yes, continue"];
+const DEFAULT_CITATION_QUICK_PHRASES: ReadonlyArray<string> = ["yes", "no", "explain"];
+
 export const ClientSettingsSchema = Schema.Struct({
   notificationMode: NotificationMode.pipe(
     Schema.withDecodingDefault(Effect.succeed("off" as const)),
@@ -617,6 +622,12 @@ export const ClientSettingsSchema = Schema.Struct({
   // Opt-in TeX typesetting in rendered Markdown. Off keeps math parsing and
   // KaTeX out of the render path entirely.
   mathRenderingEnabled: Schema.Boolean.pipe(Schema.withDecodingDefault(Effect.succeed(false))),
+  composerQuickPhrases: QuickPhrases.pipe(
+    Schema.withDecodingDefault(Effect.succeed(DEFAULT_COMPOSER_QUICK_PHRASES)),
+  ),
+  citationQuickPhrases: QuickPhrases.pipe(
+    Schema.withDecodingDefault(Effect.succeed(DEFAULT_CITATION_QUICK_PHRASES)),
+  ),
 });
 export type ClientSettings = typeof ClientSettingsSchema.Type;
 
@@ -2212,5 +2223,7 @@ export const ClientSettingsPatch = Schema.Struct({
   snapShotAnimations: Schema.optionalKey(Schema.Boolean),
   wordWrap: Schema.optionalKey(Schema.Boolean),
   mathRenderingEnabled: Schema.optionalKey(Schema.Boolean),
+  composerQuickPhrases: Schema.optionalKey(QuickPhrases),
+  citationQuickPhrases: Schema.optionalKey(QuickPhrases),
 });
 export type ClientSettingsPatch = typeof ClientSettingsPatch.Type;

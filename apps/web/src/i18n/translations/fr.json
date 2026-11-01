@@ -13057,5 +13057,13 @@
   "726f583674a6068c": "Impossible d'ouvrir le fichier HTML",
   "29a6abf46e347631": "Copier l'URL du navigateur",
   "9908045b162ec60f": "Ouvrir dans le navigateur T3",
-  "7240fae7f40fdaff": "Importer depuis t3.json"
+  "7240fae7f40fdaff": "Importer depuis t3.json",
+  "c73dbf9420db3bbb": "Phrases rapides",
+  "35d9d0d9d584e99b": "Phrases rapides pour les citations",
+  "cf0dae1a7a469f5a": "Boutons au-dessus de la zone de saisie qui envoient une phrase en un clic. Une phrase par ligne.",
+  "a55a3fe6921cf01b": "Réinitialiser les phrases rapides par défaut",
+  "63ee4677663627db": "Boutons dans la zone de commentaire d'une réponse citée qui enregistrent la phrase comme commentaire. Une phrase par ligne.",
+  "e6399279e40f051c": "Réinitialiser les phrases rapides pour les citations par défaut",
+  "75e71adec12e50ad": "boutons un clic envoyer réponse prédéfinie modèle prompt extrait saisie buttons",
+  "ab44cdea5ef13464": "citation réponse commentaire boutons un clic prédéfini modèle quote"
 }
