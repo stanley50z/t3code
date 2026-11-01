@@ -1,11 +1,47 @@
-import { EnvironmentId } from "@t3tools/contracts";
+import { EnvironmentId, type ProjectScript } from "@t3tools/contracts";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
-import { expect, it } from "vite-plus/test";
+import { describe, expect, it, vi } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
 
 import { act, render } from "../../test/render";
 import ProjectScriptsControl, { type ProjectScriptActionResult } from "./ProjectScriptsControl";
+
+const script = (id: string, name: string): ProjectScript => ({
+  id,
+  name,
+  command: `pnpm ${id}`,
+  icon: "play",
+  runOnWorktreeCreate: false,
+});
+
+const scripts = [script("dev", "Dev"), script("test", "Test"), script("lint", "Lint")];
+const settled = async () => ({ _tag: "Success", value: undefined }) as ProjectScriptActionResult;
+
+describe("ProjectScriptsControl panel", () => {
+  it("runs any script with one click instead of hiding the rest in a menu", async () => {
+    const onRunScript = vi.fn();
+    await using _screen = await render(
+      <ProjectScriptsControl
+        environmentId={EnvironmentId.make("local")}
+        displayMode="panel"
+        scripts={scripts}
+        preferredScriptId="dev"
+        onRunScript={onRunScript}
+        onAddScript={settled}
+        onUpdateScript={settled}
+        onDeleteScript={settled}
+      />,
+    );
+
+    for (const { name } of scripts) {
+      await expect.element(page.getByRole("button", { name: `Run ${name}` })).toBeVisible();
+    }
+    await page.getByRole("button", { name: "Run Lint" }).click();
+    expect(onRunScript).toHaveBeenCalledWith(scripts[2]);
+    await expect.element(page.getByRole("button", { name: "Add project script" })).toBeVisible();
+  });
+});
 
 it.each(["edit", "dismiss", "newer import fails first"] as const)(
   "keeps a failed import from replacing a newer action after %s",
@@ -36,16 +72,15 @@ it.each(["edit", "dismiss", "newer import fails first"] as const)(
       />,
     );
 
-    const actions = screen.getByRole("button", { name: "Script actions" });
+    const imports = screen.getByRole("button", { name: "Import from t3.json" });
     const dialog = page.getByRole("dialog");
     const name = dialog.getByRole("textbox", { name: "Name" });
     const failure = AsyncResult.failure<void, unknown>(
       Cause.fail(new Error("Settings write failed")),
     );
 
-    await actions.click();
+    await imports.click();
     await page.getByRole("menuitem", { name: /Shared build/ }).click();
-    await actions.click();
 
     switch (nextAction) {
       case "edit":
@@ -54,7 +89,7 @@ it.each(["edit", "dismiss", "newer import fails first"] as const)(
         expect(name.query()).toHaveProperty("value", "Local check");
         break;
       case "dismiss":
-        await page.getByRole("menuitem", { name: "Add project script" }).click();
+        await page.getByRole("button", { name: "Add project script" }).click();
         await expect.element(dialog).toBeVisible();
         await userEvent.keyboard("{Escape}");
         await expect.element(dialog).not.toBeInTheDocument();
@@ -62,6 +97,7 @@ it.each(["edit", "dismiss", "newer import fails first"] as const)(
         expect(dialog.query() === null).toBe(true);
         break;
       case "newer import fails first":
+        await imports.click();
         await page.getByRole("menuitem", { name: /Shared lint/ }).click();
         await act(async () => newer.resolve(failure));
         await act(async () => older.resolve(failure));
