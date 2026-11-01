@@ -4,6 +4,7 @@
 
 ## Patch policy
 
+- When the user proposes a feature or bug fix, first search upstream `pingdotgg/t3code` issues and PRs, open and closed, and report what you find before writing code. The results decide which rule below applies.
 - If the corresponding fix is already merged upstream, fetch and rebase `sz/main` onto the newest `upstream/main`, preserving unrelated fork changes and dropping duplicate patches. Use the merged fix through that rebase instead of implementing or cherry-picking it separately.
 - A wanted feature available in an unmerged upstream PR is pulled in as one squashed commit with a `Fork-Upstream-PR: <number>` trailer. When upstream merges that PR, drop the patch during the rebase.
 - A feature with no upstream PR is implemented here, with a `Fork-Tracking:` trailer naming the related upstream issues or discussions.
