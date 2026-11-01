@@ -31,6 +31,8 @@ import * as Schema from "effect/Schema";
 import { APP_VERSION, HOSTED_APP_CHANNEL, HOSTED_APP_CHANNEL_LABEL } from "../../branding";
 import { AboutVersionTitle } from "./AboutVersionTitle";
 import { CliCommandSettingsRow } from "./CliCommandSettingsRow";
+import { parseQuickPhrases } from "../chat/QuickPhrases.logic";
+import { Textarea } from "../ui/textarea";
 import { MobileAppSettingsRow } from "./MobileAppSettingsRow";
 import {
   canCheckForUpdate,
@@ -525,6 +527,12 @@ export function useSettingsRestore(onRestored?: () => void) {
       ? ["Rich text composer"]
       : []),
     ...(settings.sendShortcut !== DEFAULT_UNIFIED_SETTINGS.sendShortcut ? ["Send shortcut"] : []),
+    ...(!Equal.equals(settings.composerQuickPhrases, DEFAULT_UNIFIED_SETTINGS.composerQuickPhrases)
+      ? ["Quick phrases"]
+      : []),
+    ...(!Equal.equals(settings.citationQuickPhrases, DEFAULT_UNIFIED_SETTINGS.citationQuickPhrases)
+      ? ["Quote quick phrases"]
+      : []),
     ...(settings.followUpBehavior !== DEFAULT_UNIFIED_SETTINGS.followUpBehavior
       ? ["Follow-up behavior"]
       : []),
@@ -644,6 +652,8 @@ export function useSettingsRestore(onRestored?: () => void) {
       showSkillsInSlashMenu: DEFAULT_UNIFIED_SETTINGS.showSkillsInSlashMenu,
       composerRichTextEnabled: DEFAULT_UNIFIED_SETTINGS.composerRichTextEnabled,
       sendShortcut: DEFAULT_UNIFIED_SETTINGS.sendShortcut,
+      composerQuickPhrases: DEFAULT_UNIFIED_SETTINGS.composerQuickPhrases,
+      citationQuickPhrases: DEFAULT_UNIFIED_SETTINGS.citationQuickPhrases,
       followUpBehavior: DEFAULT_UNIFIED_SETTINGS.followUpBehavior,
       contextWindowMeterEnabled: DEFAULT_UNIFIED_SETTINGS.contextWindowMeterEnabled,
       environmentIdentificationMode: DEFAULT_UNIFIED_SETTINGS.environmentIdentificationMode,
@@ -1076,6 +1086,35 @@ export function GeneralSettingsPanel() {
   );
 }
 
+/** Edits a phrase list as lines and saves on blur. Key it by the saved list to pick up resets. */
+function QuickPhrasesTextarea({
+  label,
+  phrases,
+  onChange,
+}: {
+  label: string;
+  phrases: ReadonlyArray<string>;
+  onChange: (phrases: string[]) => void;
+}) {
+  const saved = phrases.join("\n");
+  const [draft, setDraft] = useState(saved);
+  return (
+    <div className="pb-3 pt-2">
+      <Textarea
+        aria-label={label}
+        size="sm"
+        value={draft}
+        onChange={(event) => setDraft(event.currentTarget.value)}
+        onBlur={() => {
+          const next = parseQuickPhrases(draft);
+          setDraft(next.join("\n"));
+          if (next.join("\n") !== saved) onChange(next);
+        }}
+      />
+    </div>
+  );
+}
+
 export function ChatSettingsPanel() {
   const modifierLabel = isMacPlatform(navigator.platform) ? "⌘" : "Ctrl";
   const sendShortcutOptions = [
@@ -1161,6 +1200,58 @@ export function ChatSettingsPanel() {
             </Select>
           }
         />
+        <SettingsRow
+          {...searchableSetting("composer-quick-phrases")}
+          description="Buttons above the composer that send a phrase in one click. One phrase per line."
+          resetAction={
+            !Equal.equals(
+              settings.composerQuickPhrases,
+              DEFAULT_UNIFIED_SETTINGS.composerQuickPhrases,
+            ) ? (
+              <SettingResetButton
+                label="quick phrases"
+                onClick={() =>
+                  updateSettings({
+                    composerQuickPhrases: DEFAULT_UNIFIED_SETTINGS.composerQuickPhrases,
+                  })
+                }
+              />
+            ) : null
+          }
+        >
+          <QuickPhrasesTextarea
+            key={settings.composerQuickPhrases.join("\n")}
+            label="Quick phrases"
+            phrases={settings.composerQuickPhrases}
+            onChange={(composerQuickPhrases) => updateSettings({ composerQuickPhrases })}
+          />
+        </SettingsRow>
+        <SettingsRow
+          {...searchableSetting("citation-quick-phrases")}
+          description="Buttons in the comment box of a quoted reply that save the phrase as its comment. One phrase per line."
+          resetAction={
+            !Equal.equals(
+              settings.citationQuickPhrases,
+              DEFAULT_UNIFIED_SETTINGS.citationQuickPhrases,
+            ) ? (
+              <SettingResetButton
+                label="quote quick phrases"
+                onClick={() =>
+                  updateSettings({
+                    citationQuickPhrases: DEFAULT_UNIFIED_SETTINGS.citationQuickPhrases,
+                  })
+                }
+              />
+            ) : null
+          }
+        >
+          <QuickPhrasesTextarea
+            key={settings.citationQuickPhrases.join("\n")}
+            label="Quote quick phrases"
+            phrases={settings.citationQuickPhrases}
+            onChange={(citationQuickPhrases) => updateSettings({ citationQuickPhrases })}
+          />
+        </SettingsRow>
         <AdvancedSettings targetIds={[searchableSetting("skills-in-slash-menu").id]}>
           <SettingsRow
             {...searchableSetting("skills-in-slash-menu")}

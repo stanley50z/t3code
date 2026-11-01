@@ -208,6 +208,8 @@ import {
   ComposerRestingImagePreviews,
 } from "./ComposerAttachmentStrip";
 import { ComposerPrimaryActions } from "./ComposerPrimaryActions";
+import { ComposerQuickPhrases } from "./ComposerQuickPhrases";
+import { quickPhraseSuffix } from "./QuickPhrases.logic";
 import { ComposerFooterPrimaryActions } from "./ComposerFooterControls";
 import { ComposerPendingUserInputPanel } from "./ComposerPendingUserInputPanel";
 import { ComposerPlanFollowUpBanner } from "./ComposerPlanFollowUpBanner";
@@ -2552,6 +2554,17 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
     );
   };
   const insertComposerTextStable = useStableCallback(insertComposerText);
+  const sendQuickPhrase = (phrase: string) => {
+    if (insertComposerText(quickPhraseSuffix(promptRef.current, phrase), "end")) submitComposer();
+  };
+  const sendQuickPhraseStable = useStableCallback(sendQuickPhrase);
+  // A send during an approval or question would answer it, so the row hides then.
+  const showQuickPhrases =
+    settings.composerQuickPhrases.length > 0 &&
+    routeKind === "server" &&
+    canOperateThread &&
+    pendingApprovals.length === 0 &&
+    pendingUserInputs.length === 0;
 
   const insertAttachmentReferences = (
     references: ReadonlyArray<ComposerContextReference>,
@@ -3297,6 +3310,13 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
       data-chat-composer-form="true"
       {...threadContextDropTargetProps()}
     >
+      {showQuickPhrases ? (
+        <ComposerQuickPhrases
+          phrases={settings.composerQuickPhrases}
+          disabled={isSendDisabled || noProviderAvailable}
+          onSend={sendQuickPhraseStable}
+        />
+      ) : null}
       <ComposerBanner.Dock>
         <ComposerBanner.Column>
           <ComposerBannerStack items={shelfItems} />
