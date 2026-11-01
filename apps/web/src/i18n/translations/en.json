@@ -12219,5 +12219,13 @@
   "726f583674a6068c": "Unable to open HTML file",
   "29a6abf46e347631": "Copy browser URL",
   "9908045b162ec60f": "Open in T3 browser",
-  "7240fae7f40fdaff": "Import from t3.json"
+  "7240fae7f40fdaff": "Import from t3.json",
+  "c73dbf9420db3bbb": "Quick phrases",
+  "35d9d0d9d584e99b": "Quote quick phrases",
+  "cf0dae1a7a469f5a": "Buttons above the composer that send a phrase in one click. One phrase per line.",
+  "a55a3fe6921cf01b": "Reset quick phrases to default",
+  "63ee4677663627db": "Buttons in the comment box of a quoted reply that save the phrase as its comment. One phrase per line.",
+  "e6399279e40f051c": "Reset quote quick phrases to default",
+  "75e71adec12e50ad": "buttons one click send canned reply preset prompt snippet composer",
+  "ab44cdea5ef13464": "citation quote reply comment buttons one click canned preset"
 }

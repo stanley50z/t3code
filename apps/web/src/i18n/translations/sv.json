@@ -12217,5 +12217,13 @@
   "726f583674a6068c": "Det går inte att öppna HTML-filen",
   "29a6abf46e347631": "Kopiera webbläsar-URL",
   "9908045b162ec60f": "Öppna i T3-webbläsaren",
-  "7240fae7f40fdaff": "Importera från t3.json"
+  "7240fae7f40fdaff": "Importera från t3.json",
+  "c73dbf9420db3bbb": "Snabbfraser",
+  "35d9d0d9d584e99b": "Snabbfraser för citat",
+  "cf0dae1a7a469f5a": "Knappar ovanför inmatningsfältet som skickar en fras med ett klick. En fras per rad.",
+  "a55a3fe6921cf01b": "Återställ snabbfraser till standard",
+  "63ee4677663627db": "Knappar i kommentarsrutan för ett citerat svar som sparar frasen som kommentar. En fras per rad.",
+  "e6399279e40f051c": "Återställ snabbfraser för citat till standard",
+  "75e71adec12e50ad": "knappar ett klick skicka färdigt svar förval prompt textsnutt inmatning buttons",
+  "ab44cdea5ef13464": "citat svar kommentar knappar ett klick färdig förval citation quote"
 }

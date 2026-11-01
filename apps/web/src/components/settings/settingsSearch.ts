@@ -800,6 +800,18 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: [msg("enter return command ctrl multiline prompt new line composer")],
   },
   {
+    id: "composer-quick-phrases",
+    title: msg("Quick phrases"),
+    to: "/settings/chat",
+    searchTerms: [msg("buttons one click send canned reply preset prompt snippet composer")],
+  },
+  {
+    id: "citation-quick-phrases",
+    title: msg("Quote quick phrases"),
+    to: "/settings/chat",
+    searchTerms: [msg("citation quote reply comment buttons one click canned preset")],
+  },
+  {
     id: "follow-up-behavior",
     title: msg("Follow-up behavior"),
     to: "/settings/chat",

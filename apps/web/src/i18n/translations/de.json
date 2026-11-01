@@ -12210,5 +12210,13 @@
   "726f583674a6068c": "HTML-Datei kann nicht geöffnet werden",
   "29a6abf46e347631": "Browser-URL kopieren",
   "9908045b162ec60f": "Im T3-Browser öffnen",
-  "7240fae7f40fdaff": "Aus t3.json importieren"
+  "7240fae7f40fdaff": "Aus t3.json importieren",
+  "c73dbf9420db3bbb": "Schnellphrasen",
+  "35d9d0d9d584e99b": "Schnellphrasen für Zitate",
+  "cf0dae1a7a469f5a": "Schaltflächen über dem Eingabefeld, die eine Phrase mit einem Klick senden. Eine Phrase pro Zeile.",
+  "a55a3fe6921cf01b": "Schnellphrasen auf Standard zurücksetzen",
+  "63ee4677663627db": "Schaltflächen im Kommentarfeld einer zitierten Antwort, die die Phrase als Kommentar speichern. Eine Phrase pro Zeile.",
+  "e6399279e40f051c": "Schnellphrasen für Zitate auf Standard zurücksetzen",
+  "75e71adec12e50ad": "schaltflächen ein klick senden vorgefertigte antwort vorlage prompt snippet eingabefeld buttons",
+  "ab44cdea5ef13464": "zitat antwort kommentar schaltflächen ein klick vorgefertigt vorlage citation quote"
 }
