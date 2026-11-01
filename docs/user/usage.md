@@ -173,11 +173,11 @@ or endpoint configurations do not report subscription limits.
 
 Muse Code reports your Meta subscription's session and weekly windows when provider status
 refreshes (Muse 1.4.13 or newer) and with each reply. If the usage command is unavailable or
-returns no allowance, T3 Code keeps the last report for the same account, or waits for the next
-reply when none is available. Muse connections reporting the same email address count once
-across environments. Connections reporting only a display label count separately because
-labels do not uniquely identify accounts. With an API key, Muse does not report subscription
-limits.
+returns no allowance, T3 Code keeps the last report for the same account, including across
+restarts, or waits for the next reply when none is available. Muse connections reporting the
+same email address count once across environments. Connections reporting only a display label
+count separately because labels do not uniquely identify accounts. With an API key, Muse does
+not report subscription limits.
 
 API-key accounts may not report subscription limits. This also applies to Claude connections
 using a proxy through `ANTHROPIC_AUTH_TOKEN`.

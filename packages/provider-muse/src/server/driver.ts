@@ -31,6 +31,7 @@ import { museUsageAccount, museUsageWindows, type MuseUsageAccount } from "./usa
 import type { ServerProviderDraft } from "@t3tools/provider-core/server/snapshotProbe";
 import { museUsageReader } from "./usage.ts";
 import { refreshMuseUsage } from "./usageProbe.ts";
+import { makeMuseUsageStore } from "./usageStore.ts";
 import type * as MuseUsageHome from "./MuseUsageHome.ts";
 import {
   defaultProviderContinuationIdentity,
@@ -124,6 +125,9 @@ export const MuseDriver: ProviderDriver<
     // Serialize state changes and publication; CLI reads run outside this permit
     // so slow refreshes cannot block the adapter's notification stream.
     const usagePermit = yield* Semaphore.make(1);
+    const usageStore = yield* makeMuseUsageStore(
+      path.join(host.paths.stateDir, "muse-usage", `${instanceId}.json`),
+    );
     const withUsageLimits = Effect.fn("MuseDriver.withUsageLimits")(function* (
       provider: ServerProviderDraft,
     ) {
@@ -132,7 +136,7 @@ export const MuseDriver: ProviderDriver<
         environment: processEnvironment,
         cwd,
         provider,
-        state: { account: usageAccount, latestUsage, permit: usagePermit },
+        state: { account: usageAccount, latestUsage, permit: usagePermit, store: usageStore },
       });
       return refreshed.provider;
     });
@@ -235,6 +239,7 @@ export const MuseDriver: ProviderDriver<
         const { auth } = yield* snapshot.getSnapshot;
         // The probe may have advanced the generation before publishing its new account.
         if (!newer || auth.type === "apiKey" || museUsageAccount(auth) !== account.identity) return;
+        if (account.identity) yield* usageStore.save({ identity: account.identity, usage });
         const now = yield* DateTime.now;
         yield* snapshot.applyUsageLimits({
           windows: museUsageWindows(usage, DateTime.toEpochMillis(now)),

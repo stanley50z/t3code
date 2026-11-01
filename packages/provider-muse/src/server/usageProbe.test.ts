@@ -12,6 +12,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { MuseSettings } from "../settings.ts";
 import { refreshMuseUsage as refreshState, type MuseUsageReport } from "./usageProbe.ts";
 import type { MuseUsageAccount } from "./usageLimits.ts";
+import { makeMuseUsageStore, type MuseUsageStore } from "./usageStore.ts";
 import * as Ref from "effect/Ref";
 import * as Semaphore from "effect/Semaphore";
 
@@ -75,10 +76,13 @@ const fixture = (source = `process.stdout.write(${JSON.stringify(JSON.stringify(
     };
   });
 
+const noStore: MuseUsageStore = { take: Effect.undefined, save: () => Effect.void };
+
 const refreshMuseUsage = Effect.fn("test.refreshMuseUsage")(function* (
   input: Omit<Parameters<typeof refreshState>[0], "state"> & {
     readonly account: MuseUsageAccount;
     readonly latestUsage: MuseUsageReport | undefined;
+    readonly store?: MuseUsageStore;
   },
 ) {
   return yield* refreshState({
@@ -87,6 +91,7 @@ const refreshMuseUsage = Effect.fn("test.refreshMuseUsage")(function* (
       account: yield* Ref.make(input.account),
       latestUsage: yield* Ref.make(input.latestUsage),
       permit: yield* Semaphore.make(1),
+      store: input.store ?? noStore,
     },
   });
 });
@@ -156,6 +161,36 @@ it.layer(NodeServices.layer)("Muse CLI usage refresh", (it) => {
         const first = yield* refreshMuseUsage(input);
         expect(first.latestUsage).toBeUndefined();
         expect(first.provider.usageLimits?.unavailable?.message).toContain("next reply");
+      }),
+    ),
+  );
+
+  it.effect("shows the report saved for the same login after a restart", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const filePath = `${yield* fs.makeTempDirectoryScoped({ prefix: "muse-usage-store-" })}/muse.json`;
+        const reading = yield* fixture();
+        yield* refreshMuseUsage({ ...reading, store: yield* makeMuseUsageStore(filePath) });
+
+        const empty = yield* fixture(
+          'process.stdout.write(JSON.stringify({schemaVersion:1,allowance:null,reason:"server_sent_no_usage"}));',
+        );
+        const restarted = yield* refreshMuseUsage({
+          ...empty,
+          store: yield* makeMuseUsageStore(filePath),
+        });
+        expect(restarted.latestUsage).toEqual(report);
+        expect(restarted.provider.usageLimits?.checkedAt).toBe("2026-10-27T04:04:11.130Z");
+        expect(restarted.provider.usageLimits?.windows.map((w) => w.usedPercent)).toEqual([1, 33]);
+
+        const otherLogin = yield* refreshMuseUsage({
+          ...empty,
+          provider: { ...provider, auth: { ...provider.auth, email: "b@example.com" } },
+          store: yield* makeMuseUsageStore(filePath),
+        });
+        expect(otherLogin.latestUsage).toBeUndefined();
+        expect(otherLogin.provider.usageLimits?.unavailable?.message).toContain("next reply");
       }),
     ),
   );
@@ -261,6 +296,7 @@ it.layer(NodeServices.layer)("Muse CLI usage refresh", (it) => {
             account: yield* Ref.make<MuseUsageAccount>(account),
             latestUsage: yield* Ref.make<MuseUsageReport | undefined>(report),
             permit: yield* Semaphore.make(1),
+            store: noStore,
           };
           const started = yield* Deferred.make<void>();
           const release = yield* Deferred.make<void>();
@@ -318,6 +354,7 @@ it.layer(NodeServices.layer)("Muse CLI usage refresh", (it) => {
           account: yield* Ref.make<MuseUsageAccount>(account),
           latestUsage: yield* Ref.make<MuseUsageReport | undefined>(report),
           permit: yield* Semaphore.make(1),
+          store: noStore,
         };
         const started = yield* Deferred.make<void>();
         const release = yield* Deferred.make<void>();
