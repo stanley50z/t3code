@@ -153,25 +153,29 @@ export default function ProjectScriptsControl({
     }
   };
 
-  const importMenuItems = importableScripts.length > 0 && (
+  const importMenuGroup = importableScripts.length > 0 && (
+    <MenuGroup>
+      <MenuGroupLabel>From t3.json</MenuGroupLabel>
+      {importableScripts.map((fileScript) => (
+        <MenuItem
+          density={presentation === "menu" ? "touch" : "default"}
+          key={`${fileScript.name} ${fileScript.command}`}
+          onClick={() => void importFileScript(fileScript)}
+        >
+          <ScriptIcon icon={fileScript.icon ?? "play"} className="size-4" />
+          <MenuItemLabel>{fileScript.name}</MenuItemLabel>
+          <MenuShortcut>
+            <DownloadIcon className="size-3.5" aria-label="Import" />
+          </MenuShortcut>
+        </MenuItem>
+      ))}
+    </MenuGroup>
+  );
+
+  const importMenuItems = importMenuGroup && (
     <>
       {scripts.length > 0 && <MenuSeparator />}
-      <MenuGroup>
-        <MenuGroupLabel>From t3.json</MenuGroupLabel>
-        {importableScripts.map((fileScript) => (
-          <MenuItem
-            density={presentation === "menu" ? "touch" : "default"}
-            key={`${fileScript.name} ${fileScript.command}`}
-            onClick={() => void importFileScript(fileScript)}
-          >
-            <ScriptIcon icon={fileScript.icon ?? "play"} className="size-4" />
-            <MenuItemLabel>{fileScript.name}</MenuItemLabel>
-            <MenuShortcut>
-              <DownloadIcon className="size-3.5" aria-label="Import" />
-            </MenuShortcut>
-          </MenuItem>
-        ))}
-      </MenuGroup>
+      {importMenuGroup}
     </>
   );
 
@@ -235,9 +239,120 @@ export default function ProjectScriptsControl({
     </>
   );
 
+  const runTooltip = (script: ProjectScript) =>
+    onRunScript
+      ? `Run ${script.name}`
+      : "Pair this client again with permission to run terminal commands.";
+
+  // Fork: Thread details lists every script as its own row instead of hiding them in a menu.
+  const panelScriptList = (
+    <div role="group" aria-label="Project scripts" className="flex flex-col">
+      {scripts.map((script) => {
+        const shortcutLabel = shortcutLabelForCommand(
+          keybindings,
+          commandForProjectScript(script.id),
+        );
+        return (
+          <div key={script.id} className={THREAD_DETAILS_PANEL_SPLIT_GROUP_CLASS}>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <ThreadDetailsControl
+                    size="xs"
+                    variant="ghost"
+                    part="primary"
+                    aria-label={`Run ${script.name}`}
+                    aria-disabled={!onRunScript || undefined}
+                    onClick={() => onRunScript?.(script)}
+                  />
+                }
+              >
+                <ScriptIcon icon={script.icon} className={THREAD_DETAILS_PANEL_ICON_CLASS} />
+                <span className={cn("min-w-0 truncate", THREAD_DETAILS_PANEL_LABEL_CLASS)}>
+                  {script.name}
+                </span>
+                {shortcutLabel && (
+                  <kbd className="ms-auto shrink-0 font-sans text-xs text-muted-foreground/72">
+                    {shortcutLabel}
+                  </kbd>
+                )}
+              </TooltipTrigger>
+              <TooltipPopup side="top">{runTooltip(script)}</TooltipPopup>
+            </Tooltip>
+            <span aria-hidden="true" className={THREAD_DETAILS_PANEL_SPLIT_SEPARATOR_CLASS} />
+            <span className="flex opacity-0 transition-opacity group-hover/details-split:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100">
+              <ThreadDetailsControl
+                size="sm"
+                variant="ghost"
+                part="secondary"
+                aria-label={`Edit ${script.name}`}
+                onClick={() => openEditDialog(script)}
+              >
+                <SettingsIcon className={THREAD_DETAILS_PANEL_ICON_CLASS} />
+              </ThreadDetailsControl>
+            </span>
+          </div>
+        );
+      })}
+      {importMenuGroup ? (
+        <div className={THREAD_DETAILS_PANEL_SPLIT_GROUP_CLASS} ref={panelAnchorRef}>
+          <ThreadDetailsControl
+            size="xs"
+            variant="ghost"
+            part="primary"
+            aria-label="Add project script"
+            onClick={openAddDialog}
+          >
+            <PlusIcon className={THREAD_DETAILS_PANEL_ICON_CLASS} />
+            <span className={cn("min-w-0 truncate", THREAD_DETAILS_PANEL_LABEL_CLASS)}>
+              Add project script
+            </span>
+          </ThreadDetailsControl>
+          <span aria-hidden="true" className={THREAD_DETAILS_PANEL_SPLIT_SEPARATOR_CLASS} />
+          <Menu
+            highlightItemOnHover={false}
+            open={actionsMenuOpen.imports}
+            onOpenChange={(open) =>
+              setActionsMenuOpen({ presentation, scripts: false, imports: open })
+            }
+          >
+            <MenuTrigger
+              render={
+                <ThreadDetailsControl
+                  size="sm"
+                  variant="ghost"
+                  part="secondary"
+                  aria-label="Import from t3.json"
+                />
+              }
+            >
+              <ChevronDownIcon className={THREAD_DETAILS_PANEL_CHEVRON_CLASS} />
+            </MenuTrigger>
+            <MenuPopup align="end" anchor={panelAnchorRef} className="w-(--anchor-width)">
+              {importMenuGroup}
+            </MenuPopup>
+          </Menu>
+        </div>
+      ) : (
+        <ThreadDetailsControl
+          size="xs"
+          variant="ghost"
+          part="row"
+          aria-label="Add project script"
+          onClick={openAddDialog}
+        >
+          <PlusIcon className={THREAD_DETAILS_PANEL_ICON_CLASS} />
+          <span className={THREAD_DETAILS_PANEL_LABEL_CLASS}>Add project script</span>
+        </ThreadDetailsControl>
+      )}
+    </div>
+  );
+
   return (
     <>
-      {presentation === "menu" ? (
+      {isPanel && presentation === "toolbar" ? (
+        panelScriptList
+      ) : presentation === "menu" ? (
         <>
           {primaryScript && (
             <MenuItem
