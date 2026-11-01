@@ -37,7 +37,7 @@ Usage aggregates history across Codex, Claude Code, Grok Build, OpenCode, Antigr
   - **OpenCode**: OpenCode 2 servers with usage reporting show Go allowances and Console budgets for the connected workspace. Local servers can also report Go usage from a Go API key (`OPENCODE_API_KEY`).
   - **Cursor**: Reports monthly Auto + API quotas via `CURSOR_AUTH_TOKEN` or default-endpoint sign-in/`CURSOR_API_KEY`.
   - **Grok**: Reports billing-period quotas for `grok login` (not `XAI_API_KEY`).
-  - **Muse Code**: Reports session/weekly limits when provider status refreshes (Muse 1.4.13+) and with each reply (not persisted across restarts). Connections count once only when Muse reports the same email address; API keys report none.
+  - **Muse Code**: Reports session/weekly limits when provider status refreshes (Muse 1.4.13+) and with each reply; the last report for an account survives a restart. Connections count once only when Muse reports the same email address; API keys report none.
   - Pure API-key accounts generally do not report subscription limits.
 - **Mobile widget**: Add the **Subscription usage** widget on iOS or Android to monitor Codex and Claude quotas from your home screen.
 

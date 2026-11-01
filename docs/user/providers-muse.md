@@ -25,6 +25,6 @@ Run [Muse Code](https://dev.meta.ai/docs/muse-code) on your T3 Code server. Muse
 
 **Usage → Limits** shows your Meta subscription's session and weekly windows. T3 Code checks them when provider status refreshes, without sending a model message, on Muse 1.4.13 or newer (`muse usage --json`); replies also update them.
 
-- A failed refresh shows a provider warning and keeps the last reported limits. If Meta has not reported an allowance yet, or Muse is older, limits appear after Muse's next reply.
+- A failed refresh shows a provider warning and keeps the last reported limits. If Meta has not reported an allowance yet, or Muse is older, Limits keeps the last report for the same account, even after a restart, or shows limits after Muse's next reply.
 - The same Meta account on several hosts counts once when Muse reports the same email address; connections that report only a display label count separately.
 - With an API key, Limits shows none: a key names no Meta account to count them against.
