@@ -18,6 +18,7 @@ import {
   type MuseUsageAccount,
 } from "./usageLimits.ts";
 import { makeUnavailableUsageLimits } from "@t3tools/provider-core/server/usageLimits";
+import type { MuseUsageStore } from "./usageStore.ts";
 
 const decodeUsage = Schema.decodeUnknownEffect(
   Schema.fromJsonString(
@@ -91,6 +92,7 @@ export interface MuseUsageState {
   readonly account: Ref.Ref<MuseUsageAccount>;
   readonly latestUsage: Ref.Ref<MuseUsageReport | undefined>;
   readonly permit: Semaphore.Semaphore;
+  readonly store: MuseUsageStore;
 }
 
 export const refreshMuseUsage = Effect.fn("MuseUsageProbe.refresh")(function* (input: {
@@ -108,6 +110,17 @@ export const refreshMuseUsage = Effect.fn("MuseUsageProbe.refresh")(function* (i
       const dropped = latest !== undefined && latest.generation !== account.generation;
       yield* Ref.set(state.account, account);
       if (dropped) yield* Ref.set(state.latestUsage, undefined);
+      if (typeof account.identity === "string") {
+        const saved = yield* state.store.take;
+        // A report saved under another login never shows for this one.
+        if (saved?.identity === account.identity) {
+          yield* Ref.update(state.latestUsage, (current) =>
+            current && current.usage.observedAtMs >= saved.usage.observedAtMs
+              ? current
+              : { usage: saved.usage, generation: account.generation },
+          );
+        }
+      }
       return { account, dropped };
     }),
   );
@@ -142,6 +155,9 @@ export const refreshMuseUsage = Effect.fn("MuseUsageProbe.refresh")(function* (i
       let latestUsage = previous;
       if (usage && (!latestUsage || usage.observedAtMs > latestUsage.usage.observedAtMs)) {
         latestUsage = { usage, generation: account.generation };
+        if (typeof account.identity === "string") {
+          yield* state.store.save({ identity: account.identity, usage });
+        }
       }
       let usageLimits = museStatusUsageLimits({
         auth: provider.auth,

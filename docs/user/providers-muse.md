@@ -50,7 +50,8 @@ T3 Code checks them when provider status refreshes, without sending a model
 message, on Muse versions supporting `muse usage --json` (1.4.13 or newer).
 Replies also update the windows. A failed refresh shows a provider warning and
 keeps the last reported limits. If Meta has not reported an allowance yet or
-your Muse version predates this command, limits appear after Muse's next reply. The same
+your Muse version predates this command, Limits keeps the last report for the
+same account, even after a restart, or shows limits after Muse's next reply. The same
 Meta account signed in on several hosts counts once when Muse reports the same
 email address on each host. If Muse reports only a display label, each connection
 counts separately because the label does not uniquely identify an account.
