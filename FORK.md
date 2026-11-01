@@ -23,10 +23,10 @@ A T3 scheduled task (Monday, Wednesday and Friday at 05:00) rebuilds `sz/main` o
 ```sh
 export PATH="$HOME/AppData/Local/vite-plus/bin:$HOME/.cargo/bin:$PATH"
 set -a; . ./.env.desktop-build; set +a   # gitignored public T3 Connect config
-export T3CODE_DESKTOP_VERSION=$(gh release list -R pingdotgg/t3code --limit 1 --exclude-drafts --json tagName -q '.[0].tagName | ltrimstr("v")')
+export T3CODE_DESKTOP_VERSION=$(gh release list -R pingdotgg/t3code --limit 30 --exclude-drafts --json tagName -q '[.[].tagName | select(contains("-nightly."))][0] | ltrimstr("v")')
 vp run dist:desktop:win:x64
 ```
 
-Always build with the newest published upstream release version, never a hand-picked one. Over SSH the app installs the upstream runtime archive named by its own version on the remote host (`~/.t3/runtime/versions/<version>`), so an unpublished version fails with a curl 404 and remote hosts only ever run genuine upstream runtimes.
+Always build with the newest published upstream nightly release version, never a hand-picked one. The version picks the product name, so a stable or preview build installs `T3 Code (Beta).exe` beside the nightly's `T3 Code (Nightly).exe`; switching channels makes the installer drop the old shortcuts and breaks the user's taskbar pin. Over SSH the app installs the upstream runtime archive named by its own version on the remote host (`~/.t3/runtime/versions/<version>`), so an unpublished version fails with a curl 404 and remote hosts only ever run genuine upstream runtimes.
 
 The installer lands in `release/`. It ships no update feed, so the installed app never replaces itself with upstream. Quit T3 Code before running it.
