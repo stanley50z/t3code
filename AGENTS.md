@@ -4,6 +4,10 @@ T3 Code is a minimal GUI for coding agents. A Node WebSocket server wraps provid
 
 You can think of T3 Code as an open source "bring-your-own-subscription" alternative to apps like Claude Desktop, Codex App, Cursor Glass and Conductor.
 
+## This fork
+
+This checkout is the `stanley50z/t3code` fork. Read [FORK.md](FORK.md) before changing `sz/main`. Every change to `sz/main` ends with pushing it and building a fresh Windows installer right away, without asking, then linking the installer in the reply.
+
 ## What makes T3 Code special?
 
 We have over 500,000 users who love T3 Code. It's important we maintain the things they love as we continue to iterate on the product. Here's a brief list of the things we can never compromise on.

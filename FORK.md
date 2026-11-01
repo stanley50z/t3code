@@ -4,13 +4,16 @@
 
 ## Patch policy
 
-- A wanted feature that upstream already has as a PR is pulled in as one squashed commit with a `Fork-Upstream-PR: <number>` trailer. When upstream merges that PR, the commit is dropped.
+- If the corresponding fix is already merged upstream, fetch and rebase `sz/main` onto the newest `upstream/main`, preserving unrelated fork changes and dropping duplicate patches. Use the merged fix through that rebase instead of implementing or cherry-picking it separately.
+- A wanted feature available in an unmerged upstream PR is pulled in as one squashed commit with a `Fork-Upstream-PR: <number>` trailer. When upstream merges that PR, drop the patch during the rebase.
 - A feature with no upstream PR is implemented here, with a `Fork-Tracking:` trailer naming the related upstream issues or discussions.
 - Every patch commit has a `Fork-Verify:` trailer listing the tests that check it.
 
 `git log --format='%h %s%n%(trailers)' upstream/main..sz/main` lists the patches.
 
 ## Sync
+
+Every change to `sz/main` (a rebase, a new or refreshed patch, any fork commit) must finish with the branch pushed to `origin` and a fresh Windows installer built from that source, with a clickable installer link in the final reply. Do it right away without asking. Verify the artifact exists before linking it; a source-only change is incomplete. Installing it stays manual.
 
 A T3 scheduled task (Monday, Wednesday and Friday at 05:00) rebuilds `sz/main` on the latest upstream `main`. It drops patches whose PRs merged, refreshes pulled PRs that gained commits, reports new upstream work related to our own patches, and runs each patch's `Fork-Verify` tests before force-pushing. It then builds the Windows installer as below, logging to `release/desktop-build.log`; installing it stays manual.
 
