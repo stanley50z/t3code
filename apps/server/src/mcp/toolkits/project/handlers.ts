@@ -37,8 +37,8 @@ const isAboveCeilingError = Schema.is(OrchestratorRuntimeModeAboveCeilingError);
 function projectFailure(error: Project.ProjectServiceError) {
   if (error._tag === "ProjectOperationError") return unavailable();
   const message =
-    error._tag === "ProjectInvalidError"
-      ? error.detail
+    error._tag === "ProjectInvalidError" || error._tag === "ProjectScriptIdError"
+      ? error.message
       : error._tag === "ProjectNotFoundError"
         ? "The project was not found."
         : error._tag === "ProjectConflictError"
