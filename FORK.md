@@ -18,6 +18,8 @@ Every change to `sz/main` (a rebase, a new or refreshed patch, any fork commit) 
 
 A T3 scheduled task (Monday, Wednesday and Friday at 05:00) rebuilds `sz/main` on the latest upstream `main`. It drops patches whose PRs merged, refreshes pulled PRs that gained commits, reports new upstream work related to our own patches, and runs each patch's `Fork-Verify` tests before force-pushing. It then builds the Windows installer as below, logging to `release/desktop-build.log`; installing it stays manual.
 
+Sync reports link every upstream issue, PR and discussion they mention, and say what each one is about. When an issue or PR is closed, report why: merged, closed by a maintainer (quote the reason), or converted to a discussion (link the discussion and track that instead).
+
 ## Desktop build (Windows)
 
 ```sh
