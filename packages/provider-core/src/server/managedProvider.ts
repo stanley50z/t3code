@@ -226,8 +226,12 @@ export const makeManagedServerProvider = Effect.fn("makeManagedServerProvider")(
         const previous = state.snapshot.auth;
         const differs = (a: string | undefined, b: string | undefined) =>
           a !== undefined && b !== undefined && a !== b;
+        // Some account logins identify the account by display label instead of email.
+        const identity = (auth: ServerProvider["auth"]) =>
+          auth.email?.toLowerCase() ?? (auth.type === "accountLogin" ? auth.label : undefined);
         const switchedAccount =
-          differs(probedSnapshot.auth.email?.toLowerCase(), previous.email?.toLowerCase()) ||
+          (identity(probedSnapshot.auth) !== undefined && identity(previous) === undefined) ||
+          differs(identity(probedSnapshot.auth), identity(previous)) ||
           (probedSnapshot.auth.workspaceId !== undefined &&
             probedSnapshot.auth.workspaceId !== previous.workspaceId);
         const usageLimits = switchedAccount
@@ -242,7 +246,9 @@ export const makeManagedServerProvider = Effect.fn("makeManagedServerProvider")(
         const workspaceId =
           usageLimits === probedSnapshot.usageLimits ? undefined : state.snapshot.auth.workspaceId;
         const usageAuthLabel =
-          !switchedAccount && usageLimits?.checkedAt === state.snapshot.usageLimits?.checkedAt
+          !switchedAccount &&
+          !(probedSnapshot.auth.type === "accountLogin" && !probedSnapshot.auth.email) &&
+          usageLimits?.checkedAt === state.snapshot.usageLimits?.checkedAt
             ? state.usageAuthLabel
             : undefined;
         const labeledProbe =
@@ -286,6 +292,7 @@ export const makeManagedServerProvider = Effect.fn("makeManagedServerProvider")(
               previous: state.snapshot.usageLimits,
               update,
               checkedAt: update.checkedAt,
+              ...(update.replace ? { replace: true } : {}),
             });
         const { auth } = state.snapshot;
         const label = update.windows.length > 0 ? update.authLabel : undefined;
