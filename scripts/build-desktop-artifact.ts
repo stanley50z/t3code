@@ -3185,9 +3185,13 @@ function collectUnpackedAsarFiles(
   return output;
 }
 
-const countPayloadFiles = Effect.fn("desktopArtifact.countPayloadFiles")(function* (root: string) {
+const countPayloadFiles = Effect.fn("desktopArtifact.countPayloadFiles")(function* (
+  root: string,
+  skippedDirectories: ReadonlyArray<string> = [],
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const skipped = new Set(skippedDirectories.map((directory) => path.join(root, directory)));
   const pendingDirectories = [root];
   let count = 0;
 
@@ -3199,7 +3203,7 @@ const countPayloadFiles = Effect.fn("desktopArtifact.countPayloadFiles")(functio
       const entryPath = path.join(directory, entry);
       const stat = yield* fs.stat(entryPath);
       if (stat.type === "Directory") {
-        pendingDirectories.push(entryPath);
+        if (!skipped.has(entryPath)) pendingDirectories.push(entryPath);
       } else if (stat.type === "File") {
         count += 1;
       }
@@ -3516,7 +3520,9 @@ export const validateWindowsPackagedPayload = Effect.fn(
     }
   }
 
-  const fileCount = yield* countPayloadFiles(packagedAppDir);
+  // Only native Windows hosts generate prepared server bytecode; release CI cross-builds
+  // without it, so the budget covers the shipped app and not this optional cache.
+  const fileCount = yield* countPayloadFiles(packagedAppDir, ["resources/server-compile-cache"]);
   if (fileCount > fileLimit) {
     return yield* new WindowsPackagedPayloadValidationError({
       reason: "file-limit-exceeded",
