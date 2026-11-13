@@ -18,7 +18,7 @@ import * as Stream from "effect/Stream";
 
 import * as ServerConfig from "./config.ts";
 import * as EnvironmentTheme from "./environmentTheme.ts";
-import { ServerSettingsService } from "./serverSettings.ts";
+import { resolveServerSettingsPatch, ServerSettingsService } from "./serverSettings.ts";
 import { symlinksSupported } from "@t3tools/shared/testing/symlinks";
 
 const encodeThemeFile = Schema.encodeSync(Schema.fromJsonString(EnvironmentThemeFile));
@@ -76,8 +76,9 @@ const withEnvironmentThemes = <A, E>(
           Layer.provideMerge(ServerConfig.layerTest(process.cwd(), baseDir)),
           Layer.provideMerge(
             Layer.mock(ServerSettingsService)({
-              updateSettings: (patch) =>
-                patch.defaultTheme === REFUSED_THEME_ID
+              updateSettings: (update) => {
+                const patch = resolveServerSettingsPatch(DEFAULT_SERVER_SETTINGS, update);
+                return patch.defaultTheme === REFUSED_THEME_ID
                   ? Effect.fail(
                       new ServerSettingsError({
                         settingsPath: "settings.json",
@@ -92,7 +93,8 @@ const withEnvironmentThemes = <A, E>(
                           : { appearance: patch.defaultAppearance }),
                       });
                       return DEFAULT_SERVER_SETTINGS;
-                    }),
+                    });
+              },
             }),
           ),
         ),
