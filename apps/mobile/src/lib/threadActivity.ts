@@ -35,7 +35,9 @@ import {
   type WorkLogPresentationEntry,
   type WorkLogToolLifecycleStatus,
   workEntryHiddenByToolCallVisibility,
+  workEntrySkillUse,
 } from "@t3tools/client-runtime/work-log/presentation";
+import type { SkillLoad } from "@t3tools/shared/toolActivity";
 import type { ToolCallVisibility } from "@t3tools/contracts/settings";
 import {
   resolveT3McpToolDefinition,
@@ -132,6 +134,8 @@ export interface ThreadFeedActivity {
   readonly live?: boolean;
   /** Lone calls carry the group header's label and id until a second call joins. */
   readonly groupStandIn?: { readonly groupId: string; readonly label: string };
+  /** Hidden by tool-call visibility but kept so its skill row still shows. */
+  readonly skillOnly?: true;
   readonly projectedItem: OrchestrationV2ProjectedTurnItem;
 }
 
@@ -240,6 +244,14 @@ type ThreadFeedEntryContent =
       readonly live: boolean;
       readonly shimmer: boolean;
       readonly thought?: string;
+    }
+  | {
+      /** Skills the agent loaded, lifted out of tool groups; consecutive loads share a row. */
+      readonly type: "skill-use";
+      readonly id: string;
+      readonly createdAt: string;
+      readonly runId: RunId | null;
+      readonly skills: ReadonlyArray<SkillLoad>;
     }
   | {
       /** Images the agent opened in the tool group above, kept visible while the group is collapsed. */
@@ -1422,7 +1434,7 @@ const trailingReasoningGroups = new WeakMap<ThreadFeedActivityGroup, ThreadFeedA
 function settleSupersededReasoning(
   entry: Exclude<
     ThreadFeedEntry,
-    { readonly type: "run-fold" | "work-toggle" | "thinking" | "viewed-images" }
+    { readonly type: "run-fold" | "work-toggle" | "thinking" | "viewed-images" | "skill-use" }
   >,
   tail: boolean,
 ) {
@@ -1574,17 +1586,21 @@ function activityGroupForVisibility(
 ): ThreadFeedActivityGroup | null {
   const cached = visibleActivityGroups.get(entry);
   if (cached?.visibility === visibility) return cached.group;
-  const activities = entry.activities.filter((activity) =>
-    visibility === "zen"
-      ? zenKeepsActivity(activity)
-      : !workEntryHiddenByToolCallVisibility(activity.workEntry, visibility),
-  );
-  const group =
-    activities.length === 0
-      ? null
-      : activities.length === entry.activities.length
-        ? entry
-        : { ...entry, activities };
+  let changed = false;
+  const activities = entry.activities.flatMap((activity): ThreadFeedActivity[] => {
+    if (
+      visibility === "zen"
+        ? zenKeepsActivity(activity)
+        : !workEntryHiddenByToolCallVisibility(activity.workEntry, visibility)
+    ) {
+      return [activity];
+    }
+    changed = true;
+    return visibility !== "zen" && workEntrySkillUse(activity.workEntry)
+      ? [{ ...activity, skillOnly: true }]
+      : [];
+  });
+  const group = activities.length === 0 ? null : changed ? { ...entry, activities } : entry;
   visibleActivityGroups.set(entry, { visibility, group });
   return group;
 }
@@ -1728,7 +1744,7 @@ export function deriveThreadFeedPresentation(
   const retainedFeed: Array<
     Exclude<
       ThreadFeedEntry,
-      { readonly type: "run-fold" | "work-toggle" | "thinking" | "viewed-images" }
+      { readonly type: "run-fold" | "work-toggle" | "thinking" | "viewed-images" | "skill-use" }
     >
   > = [];
   const retainedFeedIndices: number[] = [];
@@ -1746,7 +1762,8 @@ export function deriveThreadFeedPresentation(
       entry.type === "run-fold" ||
       entry.type === "work-toggle" ||
       entry.type === "thinking" ||
-      entry.type === "viewed-images"
+      entry.type === "viewed-images" ||
+      entry.type === "skill-use"
     )
       continue;
     const runId = feedEntryRunId(entry);
@@ -2127,7 +2144,7 @@ function appendPresentedFeedEntry(
   result: ThreadFeedEntry[],
   entry: Exclude<
     ThreadFeedEntry,
-    { readonly type: "run-fold" | "work-toggle" | "thinking" | "viewed-images" }
+    { readonly type: "run-fold" | "work-toggle" | "thinking" | "viewed-images" | "skill-use" }
   >,
   expandedWorkGroupIds: ReadonlySet<string>,
   activeRunId: RunId | null,
@@ -2237,6 +2254,31 @@ function appendActivityGroupRows(
   };
   for (const activity of activities) {
     const item = activity.projectedItem.item;
+    const skillUse = workEntrySkillUse(activity.workEntry);
+    if (skillUse) {
+      flushGroupableRun(false);
+      const previous = result.at(-1);
+      if (previous?.type === "skill-use" && previous.runId === activity.runId) {
+        const names = new Set(previous.skills.map((skill) => skill.name));
+        result[result.length - 1] = {
+          ...previous,
+          skills: [
+            ...previous.skills,
+            ...skillUse.skills.filter((skill) => !names.has(skill.name)),
+          ],
+        };
+      } else {
+        result.push({
+          type: "skill-use",
+          id: `skill-use:${activity.id}`,
+          createdAt: activity.createdAt,
+          runId: activity.runId,
+          skills: skillUse.skills,
+        });
+      }
+      // A command that also did other work stays a tool call below its skill row.
+      if (skillUse.exclusive || activity.skillOnly) continue;
+    }
     const severeProviderError = item.type === "error" && item.status === "failed";
     if (!activity.prominent && !severeProviderError && item.type !== "notification") {
       groupableRun.push(activity);

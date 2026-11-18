@@ -178,7 +178,14 @@ import { MARKDOWN_IMAGE_MAX_WIDTH, resolveMarkdownImageDisplaySize } from "./mar
 import { FilePreviewModal, type FilePreviewSource } from "../../components/ui/FilePreviewModal";
 import { inlineFilePreviewKind, isPdfFile } from "../../lib/filePreview";
 import { ThreadInlineFilePreview } from "./ThreadInlineFilePreview";
-import { flattenThemeColor, themeColorWithContrast } from "../../lib/mobileTheme";
+import {
+  flattenThemeColor,
+  themeColorWithAlpha,
+  themeColorWithContrast,
+} from "../../lib/mobileTheme";
+import { contextChipAccent, contextChipPresentation } from "../../lib/composerChipPresentation";
+import { CONTEXT_CHIP_ICON_SOURCES } from "../../lib/contextChipIcons.generated";
+import type { SkillLoad } from "@t3tools/shared/toolActivity";
 import { PresentationSource } from "../../components/ui/NativePresentation";
 import { NativeScrollViewMarker } from "../../native/NativeScrollViewMarker";
 import Animated, { FadeIn, FadeInDown, type SharedValue } from "react-native-reanimated";
@@ -348,6 +355,35 @@ const USER_BUBBLE_HORIZONTAL_PADDING = 3.5 * 3.5;
 const ASSISTANT_ROW_HORIZONTAL_PADDING = 3.5;
 // Virtualization remounts old rows; only newly created content should replay an entrance.
 const FRESH_ENTRY_WINDOW_MS = 3_000;
+/** Skills the agent loaded on its own, as tinted pills like the web timeline's. */
+function SkillUsePills(props: { skills: ReadonlyArray<SkillLoad> }) {
+  const theme = useUniwindTheme();
+  const body = theme["--color-md-body"];
+  const accent = contextChipAccent(contextChipPresentation("skill").accent, theme, body) ?? body;
+  return (
+    <View className="flex-row flex-wrap gap-1.5 pb-2">
+      {props.skills.map((skill) => (
+        <View
+          key={skill.name}
+          className="flex-row items-center gap-1 rounded-full border px-2 py-px"
+          style={{
+            borderColor: themeColorWithAlpha(accent, 0.45),
+            backgroundColor: themeColorWithAlpha(accent, 0.1),
+          }}
+        >
+          <Image
+            source={CONTEXT_CHIP_ICON_SOURCES.skill}
+            style={{ width: 12, height: 12, tintColor: accent }}
+          />
+          <Text className="text-xs font-medium" style={{ color: accent }}>
+            {skill.name}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 function isFreshTimestamp(input: string): boolean {
   const timestamp = Date.parse(input);
   return Number.isFinite(timestamp) && Date.now() - timestamp < FRESH_ENTRY_WINDOW_MS;
@@ -2139,6 +2175,10 @@ function renderFeedEntry(
         </MarkdownImageAvailableWidthContext>
       </View>
     );
+  }
+
+  if (entry.type === "skill-use") {
+    return <SkillUsePills skills={entry.skills} />;
   }
 
   if (entry.type === "viewed-images") {

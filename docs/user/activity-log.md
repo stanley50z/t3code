@@ -18,6 +18,15 @@ it finished, and an interrupt or cancellation request does not mean the thread s
 details are unavailable, summaries use a broader description instead of guessing how many threads
 were affected.
 
+## Skills the agent loads
+
+When the agent loads a skill on its own, the skill appears as a pill on its own line instead of
+inside the tool summary, on web, desktop, and mobile. That covers Claude's Skill tool and any
+agent that reads a skill's `SKILL.md`. Loads in a row share one line. On web and desktop, select a
+pill to see the skill's description and open its instructions. A command that read a skill along
+with other work still appears in the tool summary below its pill. Skills you invoke yourself show
+as chips in your message.
+
 ## Hide tool calls
 
 **Tool calls in chat** in **Settings → Chat** (web and desktop) or **Settings → Appearance**
@@ -27,8 +36,9 @@ it only if it fails. **Hide all** hides every call and shows **Thinking** while 
 **Zen** also hides the agent's in-between messages, so each turn shows your message
 and the agent's last reply, which appears when the turn ends. If you steer while the agent is
 answering, the answer it finished before reading your steer stays too. On web and desktop, Find
-shows the in-between messages while it is open. Approvals, questions, and errors always show. The
-setting applies to this browser or device only.
+shows the in-between messages while it is open. Approvals, questions, and errors always show.
+Skills the agent loads still show under **Hide successful** and **Hide all**. The setting applies
+to this browser or device only.
 
 ## Screen reader announcements
 
