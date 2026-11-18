@@ -1531,10 +1531,20 @@ describe("MessagesTimeline citations", () => {
     await page.getByRole("button", { name: "no", exact: true }).click();
     expect(onCiteAssistantText).toHaveBeenCalledExactlyOnceWith(
       expect.objectContaining({ messageId: MessageId.make("asked"), text, comment: "no" }),
+      undefined,
+      false,
     );
     await expect
       .element(page.getByRole("button", { name: "Cite selection in composer" }))
       .not.toBeInTheDocument();
+
+    await userEvent.tripleClick(screen.getByText(text));
+    await page.getByRole("button", { name: "yes", exact: true }).click({ modifiers: ["Control"] });
+    expect(onCiteAssistantText).toHaveBeenLastCalledWith(
+      expect.objectContaining({ text, comment: "yes" }),
+      undefined,
+      true,
+    );
   });
 
   it("lands a citation present at mount under StrictMode", async () => {
