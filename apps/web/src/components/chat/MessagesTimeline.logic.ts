@@ -34,6 +34,7 @@ import {
   type ViewedImage,
   liveThoughtLine,
   workEntryHiddenByToolCallVisibility,
+  workEntrySkillUse,
 } from "@t3tools/client-runtime/work-log/presentation";
 import {
   deriveRevertTurnCountByUserMessageId,
@@ -76,7 +77,7 @@ import { mcpAppReferencesEqual, type McpAppReference } from "@t3tools/shared/mcp
 import { formatDuration } from "@t3tools/shared/orchestrationTimingCopy";
 import { formatWorkspaceRelativePath } from "../../filePathDisplay";
 import { m, type MessageResolver } from "../../i18n/messages";
-import { collectToolFilePaths } from "@t3tools/shared/toolActivity";
+import { collectToolFilePaths, type SkillLoad } from "@t3tools/shared/toolActivity";
 import {
   dynamicToolTitle,
   formatReadToolLabel,
@@ -599,6 +600,14 @@ type MessagesTimelineRowContent =
       toolSurface?: WorkLogEntry["toolSurface"];
       toolIcon?: WorkLogEntry["toolIcon"];
       hasFailure: boolean;
+    }
+  | {
+      /** Skills the agent loaded, lifted out of tool groups; consecutive loads share a row. */
+      kind: "skill-use";
+      id: string;
+      createdAt: string;
+      runId: RunId | null;
+      skills: ReadonlyArray<SkillLoad>;
     }
   | {
       /** Images the agent opened in the tool group above, kept visible while the group is collapsed. */
@@ -1589,7 +1598,9 @@ function timelineRowEntries(
   } else if (visibility !== "showAll") {
     shown = entries.filter(
       (entry) =>
-        entry.kind !== "work" || !workEntryHiddenByToolCallVisibility(entry.entry, visibility),
+        entry.kind !== "work" ||
+        !workEntryHiddenByToolCallVisibility(entry.entry, visibility) ||
+        workEntrySkillUse(entry.entry) !== undefined,
     );
   }
   return withoutSubagentDelegationRows(settleSupersededReasoning(shown));
@@ -1654,6 +1665,7 @@ export function deriveMessagesTimelineRows(
   resolve: MessageResolver = m,
 ): MessagesTimelineRow[] {
   const timelineEntries = timelineRowEntries(input);
+  const visibility = input.toolCallVisibility ?? "showAll";
   const embeddedResultRunIds = new Set<RunId>();
   for (const entry of timelineEntries) {
     if ((entry.kind === "html-render" || entry.kind === "mcp-app") && entry.runId !== null) {
@@ -1769,6 +1781,7 @@ export function deriveMessagesTimelineRows(
         entry.entry.itemType === "todo_list" ||
         entry.entry.questionAnswer !== undefined ||
         isPendingApproval(entry.entry) ||
+        workEntrySkillUse(entry.entry) !== undefined ||
         !runIdIsActiveResponse(entry.entry.runId) ||
         entry.entry.sourceActivityKind === "context-compaction" ||
         collapsedEntryIds.has(entry.id) ||
@@ -2073,6 +2086,36 @@ export function deriveMessagesTimelineRows(
     }
 
     if (timelineEntry.kind === "work") {
+      const skillUse = workEntrySkillUse(timelineEntry.entry);
+      if (skillUse) {
+        const runId = timelineEntry.entry.runId ?? null;
+        const previous = nextRows.at(-1);
+        if (previous?.kind === "skill-use" && previous.runId === runId) {
+          const names = new Set(previous.skills.map((skill) => skill.name));
+          nextRows[nextRows.length - 1] = {
+            ...previous,
+            skills: [
+              ...previous.skills,
+              ...skillUse.skills.filter((skill) => !names.has(skill.name)),
+            ],
+          };
+        } else {
+          nextRows.push({
+            kind: "skill-use",
+            id: `skill-use:${timelineEntry.id}`,
+            createdAt: timelineEntry.createdAt,
+            runId,
+            skills: skillUse.skills,
+          });
+        }
+        // A command that also did other work stays a tool call below its skill row.
+        if (
+          skillUse.exclusive ||
+          workEntryHiddenByToolCallVisibility(timelineEntry.entry, visibility)
+        ) {
+          continue;
+        }
+      }
       if (
         isPendingApproval(timelineEntry.entry) ||
         (timelineEntry.entry.runId != null && itemizedRunIds.has(timelineEntry.entry.runId)) ||
@@ -2111,6 +2154,7 @@ export function deriveMessagesTimelineRows(
           nextEntry.entry.itemType === "todo_list" ||
           nextEntry.entry.questionAnswer !== undefined ||
           isPendingApproval(nextEntry.entry) ||
+          workEntrySkillUse(nextEntry.entry) !== undefined ||
           activeWorkEntryIds.has(nextEntry.id) ||
           collapsedEntryIds.has(nextEntry.id) ||
           collapsedSupersededEntryIds.has(nextEntry.id) ||
@@ -2848,6 +2892,11 @@ function isRowUnchanged(a: MessagesTimelineRow, b: MessagesTimelineRow): boolean
 
     case "proposed-plan":
       return a.proposedPlan === (b as typeof a).proposedPlan;
+
+    case "skill-use": {
+      const bs = b as typeof a;
+      return a.createdAt === bs.createdAt && Equal.equals(a.skills, bs.skills);
+    }
 
     case "viewed-images": {
       const bv = b as typeof a;

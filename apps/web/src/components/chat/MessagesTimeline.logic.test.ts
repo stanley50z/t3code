@@ -2361,6 +2361,99 @@ describe("deriveMessagesTimelineRows", () => {
     ]);
   });
 
+  it("lifts skill loads out of tool groups, even when tool calls are hidden", () => {
+    const threadId = ThreadId.make("skill-thread");
+    const runId = RunId.make("skill-run");
+    const at = (second: number) => `2026-01-01T00:00:${String(second).padStart(2, "0")}Z`;
+    const tool = (
+      id: string,
+      second: number,
+      payload:
+        | { type: "dynamic_tool"; toolName: string; input: unknown }
+        | { type: "command_execution"; input: string },
+      status: "completed" | "failed" = "completed",
+    ): TimelineEntry => {
+      const time = DateTime.makeUnsafe(at(second));
+      return {
+        id,
+        kind: "work",
+        createdAt: at(second),
+        entry: {
+          id,
+          createdAt: at(second),
+          runId,
+          label: id,
+          tone: "tool",
+          itemType: payload.type,
+          toolLifecycleStatus: status,
+          structuredPayload: {
+            id: TurnItemId.make(id),
+            threadId,
+            runId,
+            nodeId: null,
+            providerThreadId: null,
+            providerTurnId: null,
+            nativeItemRef: null,
+            parentItemId: null,
+            ordinal: second,
+            status,
+            title: null,
+            startedAt: time,
+            completedAt: time,
+            updatedAt: time,
+            ...payload,
+          },
+        },
+      };
+    };
+    const entries = [
+      tool("claude-skill", 1, {
+        type: "dynamic_tool",
+        toolName: "Skill",
+        input: { skill: "commit" },
+      }),
+      tool("read-skill", 2, {
+        type: "dynamic_tool",
+        toolName: "read",
+        input: { path: "/home/me/.agents/skills/tdd/SKILL.md" },
+      }),
+      tool(
+        "unknown-skill",
+        3,
+        { type: "dynamic_tool", toolName: "Skill", input: { skill: "gone" } },
+        "failed",
+      ),
+      tool("mixed", 4, {
+        type: "command_execution",
+        input: "cat ~/.agents/skills/unslop/SKILL.md\ngit status",
+      }),
+      tool("build", 5, { type: "command_execution", input: "vp build" }),
+    ];
+    const rows = (toolCallVisibility: "showAll" | "hideAll") =>
+      deriveMessagesTimelineRows({
+        timelineEntries: entries,
+        expandedRunIds: new Set([runId]),
+        isWorking: false,
+        turnDiffSummaries: [],
+        supportsConversationRollback: false,
+        toolCallVisibility,
+      }).map((row) =>
+        row.kind === "skill-use" ? `${row.id}=${row.skills.map((skill) => skill.name)}` : row.id,
+      );
+
+    expect(rows("showAll")).toEqual([
+      "turn-fold:skill-run",
+      "skill-use:claude-skill=commit,tdd",
+      "unknown-skill",
+      "skill-use:mixed=unslop",
+      "work-toggle:mixed",
+    ]);
+    expect(rows("hideAll")).toEqual([
+      "turn-fold:skill-run",
+      "skill-use:claude-skill=commit,tdd,unslop",
+    ]);
+  });
+
   it("shows images the agent viewed outside their collapsed tool group", () => {
     const threadId = ThreadId.make("viewed-images-thread");
     const runId = RunId.make("viewed-images-run");

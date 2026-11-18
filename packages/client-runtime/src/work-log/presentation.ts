@@ -21,7 +21,7 @@ import { resolveMediaSource } from "@t3tools/client-runtime/media-source";
 import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
 import { isWorkspaceImagePreviewPath } from "@t3tools/shared/mediaPreview";
 import { formatTokens } from "@t3tools/shared/usageFormat";
-import { classifyToolActivity } from "@t3tools/shared/toolActivity";
+import { classifyToolActivity, skillUse, type SkillUse } from "@t3tools/shared/toolActivity";
 import { toolOutputIndicatesFailure } from "@t3tools/shared/toolOutput";
 
 import {
@@ -378,7 +378,12 @@ function workEntryIndicatesToolFailureFromOutput(
 // their item is unchanged, so these per-entry checks are computed once.
 const entryChecks = new WeakMap<
   WorkLogPresentationEntry,
-  { failure?: boolean; displayFailure?: boolean; action?: ToolGroupAction }
+  {
+    failure?: boolean;
+    displayFailure?: boolean;
+    action?: ToolGroupAction;
+    skillUse?: SkillUse | null;
+  }
 >();
 
 function checksFor(entry: WorkLogPresentationEntry) {
@@ -399,6 +404,17 @@ export function workEntryDisplayIndicatesToolFailure(entry: WorkLogPresentationE
     entry,
     false,
   ));
+}
+
+/** Skills this entry loaded; a failed load (an unknown skill, a missing file) stays a tool call. */
+export function workEntrySkillUse(entry: WorkLogPresentationEntry): SkillUse | undefined {
+  const checks = checksFor(entry);
+  checks.skillUse ??=
+    (entry.structuredPayload &&
+      !workEntryDisplayIndicatesToolFailure(entry) &&
+      skillUse(entry.structuredPayload)) ||
+    null;
+  return checks.skillUse ?? undefined;
 }
 
 const HIDEABLE_TOOL_CALL_ITEM_TYPES: ReadonlySet<WorkLogPresentationEntry["itemType"]> = new Set([

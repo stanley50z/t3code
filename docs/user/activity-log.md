@@ -8,6 +8,15 @@ The activity log shows what an agent is doing during a turn—shell commands, fi
 - Expand an individual tool call to view its output. Running commands stream live, showing the most recent output for long logs.
 - Select **Open diff** on a file change to review the edit.
 
+## Skills the agent loads
+
+When the agent loads a skill on its own, the skill appears as a pill on its own line instead of
+inside the tool summary, on web, desktop, and mobile. That covers Claude's Skill tool and any
+agent that reads a skill's `SKILL.md`. Loads in a row share one line. On web and desktop, select a
+pill to see the skill's description and open its instructions. A command that read a skill along
+with other work still appears in the tool summary below its pill. Skills you invoke yourself show
+as chips in your message.
+
 ## Hide tool calls
 
 Configure **Settings → Chat → Tool calls in chat** (web and desktop) or **Settings → Appearance → Tool calls in chat** (mobile) to reduce noise in the conversation. This setting applies per device or browser.
@@ -19,7 +28,7 @@ Configure **Settings → Chat → Tool calls in chat** (web and desktop) or **Se
 | **Hide all**           | Hides every tool call and shows **Thinking** while the agent works.                                                                                       |
 | **Zen**                | Also hides intermediate agent messages, showing only your prompt and the agent's final reply once the turn ends (plus any reply finished before a steer). |
 
-Approvals, questions, and errors are always shown. On web and desktop, opening Find temporarily reveals hidden intermediate messages.
+Approvals, questions, and errors are always shown, and skills the agent loads still show under **Hide successful** and **Hide all**. On web and desktop, opening Find temporarily reveals hidden intermediate messages.
 
 ## Screen reader announcements
 

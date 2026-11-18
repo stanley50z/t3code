@@ -1445,6 +1445,53 @@ describe("buildThreadFeed", () => {
       ),
     ).toEqual(["message", "run-fold", "message"]);
   });
+  it("lifts skill loads out of tool groups, even when tool calls are hidden", () => {
+    const at = (second: number) => `2026-06-20T00:00:${String(second).padStart(2, "0")}.000Z`;
+    const tool = (name: string, second: number, toolName: string, input: unknown) => ({
+      ...base(name, at(second), second),
+      type: "dynamic_tool" as const,
+      toolName,
+      input,
+    });
+    const shell = (name: string, second: number, input: string) => ({
+      ...command(at(second)),
+      ...base(name, at(second), second),
+      input,
+    });
+    const items = [
+      { ...userMessage(at(1)), id: TurnItemId.make("user") },
+      tool("claude-skill", 2, "Skill", { skill: "commit" }),
+      tool("read-skill", 3, "read", { path: "/home/me/.agents/skills/tdd/SKILL.md" }),
+      shell("mixed", 4, "cat ~/.agents/skills/unslop/SKILL.md\ngit status"),
+      shell("build", 5, "vp build"),
+    ];
+    const rows = (toolCallVisibility: "showAll" | "hideAll") =>
+      deriveThreadFeedPresentation(
+        buildThreadFeed(items.map((item, index) => projected(item, index))),
+        null,
+        new Set([runId]),
+        new Set(),
+        null,
+        false,
+        undefined,
+        { toolCallVisibility, revealedMessageId: null },
+      ).map((row) =>
+        row.type === "skill-use"
+          ? `skills:${row.skills.map((skill) => skill.name)}`
+          : row.type === "activity-group"
+            ? row.activities.map((activity) => activity.projectedItem.item.id).join("+")
+            : row.type,
+      );
+
+    expect(rows("showAll")).toEqual([
+      "message",
+      "run-fold",
+      "skills:commit,tdd,unslop",
+      "work-toggle",
+    ]);
+    expect(rows("hideAll")).toEqual(["message", "run-fold", "skills:commit,tdd,unslop"]);
+  });
+
   it("hides tool calls or everything but the final answer", () => {
     const at = (second: number) => `2026-06-20T00:00:${String(second).padStart(2, "0")}.000Z`;
     const say = (name: string, second: number, user = false, steer = false) => ({

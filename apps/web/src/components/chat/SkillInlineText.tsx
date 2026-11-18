@@ -2,7 +2,7 @@ import { collectComposerModelMentions } from "@t3tools/client-runtime/composer-m
 import type { EnvironmentId, ScopedThreadRef, ServerProviderSkill } from "@t3tools/contracts";
 import { formatProviderSkillDisplayName } from "@t3tools/shared/inlineSkills";
 import { T, useGT } from "gt-react";
-import { Children, cloneElement, isValidElement, type ReactNode } from "react";
+import { Children, cloneElement, isValidElement, use, type ReactNode } from "react";
 import { matchInlineSkills } from "@t3tools/shared/inlineSkills";
 
 import { useRightPanelStore } from "~/rightPanelStore";
@@ -10,7 +10,9 @@ import { SKILL_CHIP_ICON_SVG } from "../composerInlineChip";
 import { ContextChipPopover } from "../contextChipParts";
 import { Button } from "../ui/button";
 import { PopoverClose } from "../ui/popover";
+import type { MessagesTimelineRow } from "./MessagesTimeline.logic";
 import { ModelMentionChip } from "./ModelMentionChip";
+import { TimelineRowCtx } from "./timelineRowContext";
 
 function SkillInlineText(props: {
   text: string;
@@ -119,16 +121,57 @@ export function skillInstructionsOpener(
   return () => useRightPanelStore.getState().openFile(threadRef, skill.path);
 }
 
+/** Skills the agent loaded on its own, as tinted pills that open the skill's details. */
+export function SkillUseTimelineRow({
+  row,
+}: {
+  row: Extract<MessagesTimelineRow, { kind: "skill-use" }>;
+}) {
+  const { skills, threadRef } = use(TimelineRowCtx);
+  const gt = useGT();
+  return (
+    <section aria-label={gt("Skills used")} className="flex flex-wrap gap-1.5 px-0.5 py-0.5">
+      {row.skills.map((load) => {
+        const skill =
+          skills.find((candidate) => load.path && samePath(candidate.path, load.path)) ??
+          skills.find((candidate) => candidate.name === load.name);
+        const instructions =
+          skill ?? (load.path && isAbsolutePath(load.path) ? { path: load.path } : undefined);
+        return (
+          <SkillChipPopover
+            key={load.name}
+            shape="pill"
+            label={skill ? formatProviderSkillDisplayName(skill) : load.name}
+            description={skill ? skillPopoverDescription(skill) : null}
+            onViewInstructions={skillInstructionsOpener(threadRef, instructions)}
+          />
+        );
+      })}
+    </section>
+  );
+}
+
+function samePath(left: string, right: string) {
+  const normalize = (path: string) => path.replaceAll("\\", "/").toLowerCase();
+  return normalize(left) === normalize(right);
+}
+
+function isAbsolutePath(path: string) {
+  return /^(?:[A-Za-z]:[\\/]|\/)/u.test(path);
+}
+
 export function SkillChipPopover(props: {
   label: string;
   description: string | null | undefined;
   copyMarkdown?: string | undefined;
   onViewInstructions: (() => void) | undefined;
+  shape?: "pill" | undefined;
 }) {
   const gt = useGT();
   return (
     <ContextChipPopover
       kind="skill"
+      shape={props.shape}
       icon={<SkillChipIcon />}
       label={props.label}
       accessibleLabel={gt("Skill {label}", { label: props.label })}

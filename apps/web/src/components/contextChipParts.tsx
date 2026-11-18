@@ -63,6 +63,7 @@ export function ContextChipPopover(props: {
   accessibleLabel: string;
   /** Overrides the kind's accent color. */
   accent?: string | undefined;
+  shape?: ComponentProps<typeof ContextChip>["shape"];
   children: ReactNode;
 }) {
   const gt = useGT();
@@ -72,6 +73,7 @@ export function ContextChipPopover(props: {
         render={
           <ContextChip
             kind={props.kind}
+            shape={props.shape}
             style={
               props.accent
                 ? ({ "--context-chip-accent": props.accent } as CSSProperties)

@@ -125,6 +125,7 @@ import {
   WorkGroupToggleTimelineRow,
 } from "./TimelineWorkGroupRows";
 import { ViewedImagesTimelineRow } from "./TimelineWorkEntryRow";
+import { SkillUseTimelineRow } from "./SkillInlineText";
 import { UserMessageRow } from "./TimelineUserMessageRow";
 import {
   AssistantTimelineRow,
@@ -1677,7 +1678,8 @@ const TimelineRowContent = memo(function TimelineRowContent({ row }: { row: Time
     row.kind === "work" ||
     row.kind === "work-live" ||
     row.kind === "work-toggle" ||
-    row.kind === "thinking";
+    row.kind === "thinking" ||
+    row.kind === "skill-use";
   const isExpandedToolGroupHeader =
     (row.kind === "work-toggle" || row.kind === "work-live" || row.kind === "thinking") &&
     row.expanded === true;
@@ -1737,6 +1739,7 @@ const TimelineRowContent = memo(function TimelineRowContent({ row }: { row: Time
           {row.kind === "work-live" ? <LiveWorkEntryTimelineRow row={row} /> : null}
           {row.kind === "work-toggle" ? <WorkGroupToggleTimelineRow row={row} /> : null}
           {row.kind === "thinking" ? <ThinkingTimelineRow row={row} /> : null}
+          {row.kind === "skill-use" ? <SkillUseTimelineRow row={row} /> : null}
         </WorkLogBlock>
       ) : null}
       {row.kind === "turn-fold" ? <TurnFoldTimelineRow key={row.id} row={row} /> : null}

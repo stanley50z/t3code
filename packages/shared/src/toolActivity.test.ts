@@ -1,8 +1,81 @@
 import { describe, expect, it } from "vite-plus/test";
 
-import { classifyToolActivity, dynamicToolSurface, mergeToolActivityData } from "./toolActivity.ts";
+import {
+  classifyToolActivity,
+  dynamicToolSurface,
+  mergeToolActivityData,
+  skillUse,
+} from "./toolActivity.ts";
 
 describe("toolActivity", () => {
+  it.each([
+    [
+      "Claude's Skill tool",
+      { type: "dynamic_tool", toolName: "Skill", input: { skill: "commit" } },
+    ],
+    [
+      "Muse's read_skill tool",
+      { type: "dynamic_tool", toolName: "read_skill", input: { name: "commit" } },
+    ],
+    [
+      "a read tool on SKILL.md",
+      {
+        type: "dynamic_tool",
+        toolName: "read",
+        input: { path: "C:\\Users\\me\\.agents\\skills\\commit\\SKILL.md" },
+      },
+    ],
+    [
+      "a shell read of SKILL.md",
+      {
+        type: "command_execution",
+        input: `"C:\\pwsh.exe" -NoProfile -Command "Get-Content 'C:/me/skills/commit/SKILL.md' -Encoding UTF8 | Select-Object -First 80"`,
+      },
+    ],
+    [
+      "a wrapped sed read",
+      {
+        type: "command_execution",
+        input: "/bin/zsh -lc \"sed -n '1,200p' ~/.agents/skills/commit/SKILL.md\"",
+      },
+    ],
+  ])("recognizes a skill load from %s", (_source, item) => {
+    expect(skillUse(item)).toMatchObject({ skills: [{ name: "commit" }], exclusive: true });
+  });
+
+  it("keeps a command that also does other work while naming the skills it read", () => {
+    expect(
+      skillUse({
+        type: "command_execution",
+        input:
+          "pwsh -Command 'Get-Content \"C:/my skills/unslop/SKILL.md\"; Get-Content C:/s/tdd/SKILL.md\nscp host:/a.txt .'",
+      }),
+    ).toEqual({
+      skills: [
+        { name: "unslop", path: "C:/my skills/unslop/SKILL.md" },
+        { name: "tdd", path: "C:/s/tdd/SKILL.md" },
+      ],
+      exclusive: false,
+    });
+  });
+
+  it.each([
+    [
+      "a search of skill files",
+      { type: "command_execution", input: "rg -n commit skills/commit/SKILL.md" },
+    ],
+    [
+      "a read of another file",
+      { type: "dynamic_tool", toolName: "Read", input: { file_path: "src/SKILL.md.ts" } },
+    ],
+    [
+      "an edit of SKILL.md",
+      { type: "dynamic_tool", toolName: "Edit", input: { file_path: "skills/commit/SKILL.md" } },
+    ],
+  ])("ignores %s", (_source, item) => {
+    expect(skillUse(item)).toBeUndefined();
+  });
+
   it("classifies from kind and toolName without sniffing titles", () => {
     expect(classifyToolActivity({ data: { kind: "read" } })).toBe("read");
     expect(classifyToolActivity({ data: { toolName: "Grep" } })).toBe("search");

@@ -24,6 +24,95 @@ export function claudeSkillInvocation(
   return name === undefined ? undefined : { name, args: asTrimmedString(record?.args) };
 }
 
+/** A skill the agent loaded; `path` is its SKILL.md when the call named one. */
+export interface SkillLoad {
+  readonly name: string;
+  readonly path?: string;
+}
+
+/** `exclusive` means the call only loaded skills, so a skill row can stand in for it. */
+export interface SkillUse {
+  readonly skills: ReadonlyArray<SkillLoad>;
+  readonly exclusive: boolean;
+}
+
+const SKILL_FILE_PATH = /(?:^|[\\/])([^\\/]+)[\\/]SKILL\.md$/iu;
+const SHELL_WRAPPER =
+  /^\s*(?:"([^"]+)"|'([^']+)'|(\S+))\s+(?:-{1,2}[A-Za-z]+\s+)*?(?:-l?c|-command)\s+(["'])([\s\S]*)\4\s*$/iu;
+const WRAPPER_SHELLS = new Set(["sh", "bash", "zsh", "dash", "fish", "pwsh", "powershell"]);
+const READ_PROGRAM = /^(?:cat|sed|head|tail|nl|bat|less|more|type|gc|get-content)(?=\s)/iu;
+const SKILL_FILE_ARGUMENT =
+  /"([^"]*?SKILL\.md)"|'([^']*?SKILL\.md)'|([^\s"'|<>;]*?SKILL\.md)(?![\w.])/giu;
+
+function skillLoadFromPath(path: string): SkillLoad | undefined {
+  const trimmed = path.trim();
+  const name = SKILL_FILE_PATH.exec(trimmed)?.[1];
+  return name ? { name, path: trimmed } : undefined;
+}
+
+function uniqueSkills(skills: ReadonlyArray<SkillLoad>): SkillLoad[] {
+  const seen = new Set<string>();
+  return skills.filter((skill) => !seen.has(skill.name) && seen.add(skill.name));
+}
+
+function shellScriptPayload(command: string): string {
+  const wrapper = SHELL_WRAPPER.exec(command);
+  const program = (wrapper?.[1] ?? wrapper?.[2] ?? wrapper?.[3])
+    ?.split(/[\\/]/u)
+    .at(-1)
+    ?.toLowerCase()
+    .replace(/\.exe$/u, "");
+  return program && WRAPPER_SHELLS.has(program) ? wrapper![5]! : command;
+}
+
+// Codex reads skills with shell commands, often batched with other reads in one call.
+function commandSkillUse(command: string): SkillUse | undefined {
+  const statements = shellScriptPayload(command)
+    .split(/\r?\n|;|&&|\|\|/u)
+    .map((statement) => statement.trim())
+    .filter(Boolean);
+  const skills: SkillLoad[] = [];
+  let exclusive = true;
+  for (const statement of statements) {
+    const loads = READ_PROGRAM.test(statement)
+      ? [...statement.matchAll(SKILL_FILE_ARGUMENT)].flatMap(
+          (match) => skillLoadFromPath(match[1] ?? match[2] ?? match[3] ?? "") ?? [],
+        )
+      : [];
+    if (loads.length === 0) exclusive = false;
+    skills.push(...loads);
+  }
+  return skills.length > 0 ? { skills: uniqueSkills(skills), exclusive } : undefined;
+}
+
+/** Skills a turn item loaded: a native skill tool, a read of SKILL.md, or a shell read of one. */
+export function skillUse(item: {
+  readonly type: string;
+  readonly toolName?: string | null | undefined;
+  readonly input?: unknown;
+}): SkillUse | undefined {
+  if (item.type === "command_execution") {
+    return typeof item.input === "string" ? commandSkillUse(item.input) : undefined;
+  }
+  if (item.type !== "dynamic_tool") return undefined;
+  const named =
+    claudeSkillInvocation(item.toolName, item.input)?.name ??
+    (item.toolName === "read_skill" ? asTrimmedString(asRecord(item.input)?.name) : undefined);
+  if (named) return { skills: [{ name: named }], exclusive: true };
+  if (
+    classifyToolActivity({
+      itemType: "dynamic_tool_call",
+      data: item.toolName ? { toolName: item.toolName } : {},
+    }) !== "read"
+  ) {
+    return undefined;
+  }
+  const loads = collectToolFilePaths({ input: item.input }).map(skillLoadFromPath);
+  return loads.length > 0 && loads.every((load) => load !== undefined)
+    ? { skills: uniqueSkills(loads), exclusive: true }
+    : undefined;
+}
+
 export function isJavaScriptReplTool(toolName: string | null | undefined): boolean {
   return toolName === "js" || toolName === "cua_repl.js" || toolName === "node_repl.js";
 }

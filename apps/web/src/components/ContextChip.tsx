@@ -41,6 +41,7 @@ const contextChipVariants = cva(
       shape: {
         inline: "",
         bubble: "w-64 gap-2 rounded-2xl bg-message px-3 py-2 text-sm text-message-foreground",
+        pill: "gap-1.5 rounded-full border border-(--context-chip-accent)/45 bg-(--context-chip-accent)/10 px-2 py-px text-xs leading-5",
       },
       state: {
         unresolved: "data-[state=unresolved]:[--context-chip-accent:currentColor]",
@@ -56,7 +57,7 @@ type ContextChipKind = NonNullable<VariantProps<typeof contextChipVariants>["kin
 interface ContextChipProps extends useRender.ComponentProps<"span"> {
   kind?: ContextChipKind;
   state?: "unresolved" | "invalid";
-  shape?: "inline" | "bubble";
+  shape?: "inline" | "bubble" | "pill" | undefined;
 }
 
 function ContextChip({ className, kind, state, shape, render, ...props }: ContextChipProps) {
