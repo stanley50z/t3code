@@ -13069,8 +13069,9 @@
   "35d9d0d9d584e99b": "Snabbfraser för citat",
   "cf0dae1a7a469f5a": "Knappar ovanför inmatningsfältet som skickar en fras med ett klick. En fras per rad.",
   "a55a3fe6921cf01b": "Återställ snabbfraser till standard",
-  "63ee4677663627db": "Knappar i kommentarsrutan för ett citerat svar som sparar frasen som kommentar. En fras per rad.",
+  "bd87d54e80faa16a": "Knappar som visas på markerad assistenttext och citerar den med frasen som kommentar. En fras per rad.",
   "e6399279e40f051c": "Återställ snabbfraser för citat till standard",
   "75e71adec12e50ad": "knappar ett klick skicka färdigt svar förval prompt textsnutt inmatning buttons",
-  "ab44cdea5ef13464": "citat svar kommentar knappar ett klick färdig förval citation quote"
+  "a436888b41f27805": "citat svar kommentar knappar ett klick färdig förval citation quote markering",
+  "554283b020f6cf09": "Åtgärder för markerad text"
 }

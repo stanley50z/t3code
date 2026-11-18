@@ -14,9 +14,7 @@ import { TextFieldSpeechControls, useTextFieldSpeech } from "~/speech/useTextFie
 import { textDirection } from "~/textDirection";
 
 import { ComposerContextActionsContext } from "../composerContextActions";
-import { useClientSettings } from "../../hooks/useSettings";
 import { Button } from "../ui/button";
-import { quickPhraseSuffix } from "./QuickPhrases.logic";
 
 /** Lets the popover finish a running dictation, instead of discarding it, when it is dismissed. */
 export type AssistantCitationCommentDictation = {
@@ -80,17 +78,10 @@ export function AssistantCitationCommentEditor({
       return true;
     },
   }));
-  const quickPhrases = useClientSettings((settings) => settings.citationQuickPhrases);
   const commentTooLong = comment.length > ASSISTANT_CITATION_MAX_COMMENT_LENGTH;
   const submit = () => {
     speech.submitAfterDictation((text) => {
       if (text.length <= ASSISTANT_CITATION_MAX_COMMENT_LENGTH) onSubmit(text);
-    });
-  };
-  const submitPhrase = (phrase: string) => {
-    speech.submitAfterDictation((text) => {
-      const next = text + quickPhraseSuffix(text, phrase);
-      if (next.length <= ASSISTANT_CITATION_MAX_COMMENT_LENGTH) onSubmit(next);
     });
   };
   const submitAndSend = () => {
@@ -151,21 +142,6 @@ export function AssistantCitationCommentEditor({
         </p>
       ) : null}
       <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
-        {quickPhrases.map((phrase) => (
-          <Button
-            key={phrase}
-            variant="outline"
-            size="xs"
-            className="max-w-40"
-            title={phrase}
-            disabled={speech.preparing || commentTooLong}
-            onPointerDown={(event) => event.preventDefault()}
-            onClick={() => submitPhrase(phrase)}
-          >
-            <span className="truncate">{phrase}</span>
-          </Button>
-        ))}
-        <span className="flex-1" />
         <TextFieldSpeechControls speech={speech} />
         {/* Wrap as a pair so the recording pill never pushes Save alone onto a new row under Cancel. */}
         <div className="flex gap-2">

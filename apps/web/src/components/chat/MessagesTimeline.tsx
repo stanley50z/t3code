@@ -242,7 +242,7 @@ interface MessagesTimelineProps {
   citationHistory?: CitedHistory;
   onCiteAssistantText?: (
     citation: AssistantCitation,
-    sourceAnchor: AssistantCitationSourceAnchor,
+    sourceAnchor?: AssistantCitationSourceAnchor,
   ) => boolean;
   onReplyToResponse?: TimelineRowSharedState["onReplyToResponse"];
   isWorking: boolean;

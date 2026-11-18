@@ -1521,6 +1521,22 @@ describe("MessagesTimeline citations", () => {
       .toBeVisible();
   });
 
+  it("cites the selection with a quick phrase as its comment, skipping the comment box", async () => {
+    const text = "Apply both changes first?";
+    const onCiteAssistantText = vi.fn(() => true);
+    await using screen = await renderTimeline([message(text, { role: "assistant" }, "asked")], {
+      onCiteAssistantText,
+    });
+    await userEvent.tripleClick(screen.getByText(text));
+    await page.getByRole("button", { name: "no", exact: true }).click();
+    expect(onCiteAssistantText).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ messageId: MessageId.make("asked"), text, comment: "no" }),
+    );
+    await expect
+      .element(page.getByRole("button", { name: "Cite selection in composer" }))
+      .not.toBeInTheDocument();
+  });
+
   it("lands a citation present at mount under StrictMode", async () => {
     await using _screen = await renderElement(
       <StrictMode>

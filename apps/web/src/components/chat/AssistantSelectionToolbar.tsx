@@ -1,4 +1,5 @@
 import {
+  ASSISTANT_CITATION_MAX_COMMENT_LENGTH,
   ASSISTANT_CITATION_MAX_TEXT_LENGTH,
   MessageId,
   type AssistantCitation,
@@ -18,9 +19,14 @@ import {
   resolveSelectionActionPosition,
   type SelectionActionPoint,
 } from "~/lib/selectionActions";
+import { useClientSettings } from "../../hooks/useSettings";
 import { Button } from "../ui/button";
 import { BackgroundThreadContext } from "./backgroundThread";
 
+/**
+ * Floats over selected assistant text in a timeline viewport. Quote quick phrases cite the
+ * selection with the phrase as its comment; Cite opens the comment box (`onCite` with an anchor).
+ */
 export function AssistantSelectionToolbar({
   viewport,
   threadRef,
@@ -28,16 +34,17 @@ export function AssistantSelectionToolbar({
 }: {
   viewport: HTMLElement | null;
   threadRef: ScopedThreadRef;
-  onCite: (citation: AssistantCitation, sourceAnchor: AssistantCitationSourceAnchor) => boolean;
+  onCite: (citation: AssistantCitation, sourceAnchor?: AssistantCitationSourceAnchor) => boolean;
 }) {
   const [selection, setSelection] = useState<{
     citation: AssistantCitation;
     position: SelectionActionPoint;
     sourceAnchor: AssistantCitationSourceAnchor;
   } | null>(null);
-  const toolbarRef = useRef<HTMLButtonElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<ReturnType<typeof observeSelectionActions> | null>(null);
   const backgroundThread = use(BackgroundThreadContext);
+  const quickPhrases = useClientSettings((settings) => settings.citationQuickPhrases);
   const gt = useGT();
 
   // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- measures the toolbar DOM node and clamps its position inside the window before paint
@@ -163,10 +170,11 @@ export function AssistantSelectionToolbar({
       ) {
         return;
       }
-      if (toolbar.disabled) return;
+      const first = toolbar.querySelector<HTMLButtonElement>("button:not(:disabled)");
+      if (!first) return;
       event.preventDefault();
       event.stopPropagation();
-      toolbar.focus({ preventScroll: true });
+      first.focus({ preventScroll: true });
     };
     // Tab belongs to the foreground chat; a background timeline only follows its selection.
     if (!backgroundThread) document.addEventListener("keydown", focusActions, true);
@@ -185,24 +193,24 @@ export function AssistantSelectionToolbar({
     actionsRef.current?.cancel();
     setSelection(null);
   };
-  const cite = () => {
-    if (tooLong || !onCite(selection.citation, selection.sourceAnchor)) return false;
+  const cite = (comment?: string) => {
+    if (tooLong) return;
+    const inserted =
+      comment === undefined
+        ? onCite(selection.citation, selection.sourceAnchor)
+        : onCite({ ...selection.citation, comment });
+    if (!inserted) return;
     window.getSelection()?.removeAllRanges();
     dismiss();
-    return true;
   };
   return createPortal(
-    <Button
+    <div
       ref={toolbarRef}
-      type="button"
-      size="xs"
-      variant="glass"
-      disabled={tooLong}
-      aria-label={tooLong ? gt("Selection is too long to cite") : gt("Cite selection in composer")}
-      className="fixed z-50 max-w-[calc(100vw-1rem)]"
+      role="toolbar"
+      aria-label={gt("Selected text actions")}
+      className="surface-glass fixed z-50 flex max-w-[min(24rem,calc(100vw-1rem))] flex-col gap-1 rounded-lg border border-border/60 p-1 shadow-sm"
       style={{ left: selection.position.x, top: selection.position.y }}
       onPointerDown={(event) => event.preventDefault()}
-      onClick={cite}
       onKeyDown={(event) => {
         event.stopPropagation();
         if (event.key === "Escape" && !event.nativeEvent.isComposing) {
@@ -211,11 +219,41 @@ export function AssistantSelectionToolbar({
         }
       }}
     >
-      <QuoteIcon aria-hidden="true" className="size-3.5" />
-      {tooLong
-        ? gt("Shorten selection")
-        : gt("Cite", { $context: "verb, button that quotes the selected text" })}
-    </Button>,
+      {quickPhrases.length > 0 ? (
+        <div className="flex flex-wrap gap-1">
+          {quickPhrases.map((phrase) => (
+            <Button
+              key={phrase}
+              type="button"
+              size="xs"
+              variant="outline"
+              className="max-w-40"
+              title={phrase}
+              disabled={tooLong || phrase.length > ASSISTANT_CITATION_MAX_COMMENT_LENGTH}
+              onClick={() => cite(phrase)}
+            >
+              <span className="truncate">{phrase}</span>
+            </Button>
+          ))}
+        </div>
+      ) : null}
+      <Button
+        type="button"
+        size="xs"
+        variant="ghost"
+        className="self-start"
+        disabled={tooLong}
+        aria-label={
+          tooLong ? gt("Selection is too long to cite") : gt("Cite selection in composer")
+        }
+        onClick={() => cite()}
+      >
+        <QuoteIcon aria-hidden="true" className="size-3.5" />
+        {tooLong
+          ? gt("Shorten selection")
+          : gt("Cite", { $context: "verb, button that quotes the selected text" })}
+      </Button>
+    </div>,
     document.body,
   );
 }

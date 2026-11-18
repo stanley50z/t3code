@@ -13062,8 +13062,9 @@
   "35d9d0d9d584e99b": "Phrases rapides pour les citations",
   "cf0dae1a7a469f5a": "Boutons au-dessus de la zone de saisie qui envoient une phrase en un clic. Une phrase par ligne.",
   "a55a3fe6921cf01b": "Réinitialiser les phrases rapides par défaut",
-  "63ee4677663627db": "Boutons dans la zone de commentaire d'une réponse citée qui enregistrent la phrase comme commentaire. Une phrase par ligne.",
+  "bd87d54e80faa16a": "Boutons affichés sur le texte sélectionné de l'assistant qui le citent avec la phrase comme commentaire. Une phrase par ligne.",
   "e6399279e40f051c": "Réinitialiser les phrases rapides pour les citations par défaut",
   "75e71adec12e50ad": "boutons un clic envoyer réponse prédéfinie modèle prompt extrait saisie buttons",
-  "ab44cdea5ef13464": "citation réponse commentaire boutons un clic prédéfini modèle quote"
+  "a436888b41f27805": "citation réponse commentaire boutons un clic prédéfini modèle quote sélection",
+  "554283b020f6cf09": "Actions sur le texte sélectionné"
 }

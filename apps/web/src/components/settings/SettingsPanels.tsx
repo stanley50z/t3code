@@ -1390,7 +1390,7 @@ export function ChatSettingsPanel() {
         <SettingsRow
           {...setting("citation-quick-phrases")}
           description={gt(
-            "Buttons in the comment box of a quoted reply that save the phrase as its comment. One phrase per line.",
+            "Buttons shown on selected assistant text that quote it with the phrase as its comment. One phrase per line.",
           )}
           resetAction={
             !Equal.equals(
