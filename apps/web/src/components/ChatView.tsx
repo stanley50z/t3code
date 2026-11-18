@@ -659,8 +659,9 @@ export default function ChatView(props: ChatViewProps) {
   const citeAssistantText = (
     citation: AssistantCitation,
     sourceAnchor?: AssistantCitationSourceAnchor,
+    send?: boolean,
   ) => {
-    const inserted = composerRef.current?.citeAssistantText(citation, sourceAnchor) ?? false;
+    const inserted = composerRef.current?.citeAssistantText(citation, sourceAnchor, send) ?? false;
     if (!inserted) {
       toastManager.add({
         type: "warning",

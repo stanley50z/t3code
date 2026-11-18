@@ -313,10 +313,14 @@ export interface ChatComposerHandle {
     options?: { ensureLeadingBoundary?: boolean; clipboardData?: DataTransfer },
   ) => boolean;
   pasteTextAtEnd: (text: string, options?: { bypassAutoAttachment?: boolean }) => boolean;
-  /** Without a source anchor the citation goes in as-is, skipping the comment box. */
+  /**
+   * Without a source anchor the citation goes in as-is, skipping the comment box. `send` then
+   * sends the composer as the Send button would. Returns whether the citation went in.
+   */
   citeAssistantText: (
     citation: AssistantCitation,
     sourceAnchor?: AssistantCitationSourceAnchor,
+    send?: boolean,
   ) => boolean;
   replyToResponse: (response: ResponseContextRecord) => boolean;
   openModelPicker: () => void;
@@ -3144,14 +3148,17 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
         focusComposer();
         return true;
       },
-      citeAssistantText: (citation, sourceAnchor) =>
-        insertComposerTextStable(
+      citeAssistantText: (citation, sourceAnchor, send) => {
+        const inserted = insertComposerTextStable(
           formatAssistantCitationForComposer(citation, citation.comment),
           "cursor",
           sourceAnchor
             ? { ensureLeadingBoundary: true, citationCommentAnchor: sourceAnchor }
             : { ensureLeadingBoundary: true },
-        ),
+        );
+        if (inserted && send && !sourceAnchor) submitCitationAndSendStable();
+        return inserted;
+      },
       replyToResponse: (response) => {
         // An open question owns the composer, and its answer would not carry the reply.
         if (pendingUserInputs.length > 0 || projectSelectionRequired) return false;

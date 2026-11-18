@@ -25,7 +25,8 @@ import { BackgroundThreadContext } from "./backgroundThread";
 
 /**
  * Floats over selected assistant text in a timeline viewport. Quote quick phrases cite the
- * selection with the phrase as its comment; Cite opens the comment box (`onCite` with an anchor).
+ * selection with the phrase as its comment, and Ctrl/Cmd+click also sends it (`onCite` with
+ * `send`); Cite opens the comment box (`onCite` with an anchor).
  */
 export function AssistantSelectionToolbar({
   viewport,
@@ -34,7 +35,11 @@ export function AssistantSelectionToolbar({
 }: {
   viewport: HTMLElement | null;
   threadRef: ScopedThreadRef;
-  onCite: (citation: AssistantCitation, sourceAnchor?: AssistantCitationSourceAnchor) => boolean;
+  onCite: (
+    citation: AssistantCitation,
+    sourceAnchor?: AssistantCitationSourceAnchor,
+    send?: boolean,
+  ) => boolean;
 }) {
   const [selection, setSelection] = useState<{
     citation: AssistantCitation;
@@ -192,12 +197,12 @@ export function AssistantSelectionToolbar({
     actionsRef.current?.cancel();
     setSelection(null);
   };
-  const cite = (comment?: string) => {
+  const cite = (comment?: string, send = false) => {
     if (tooLong) return;
     const inserted =
       comment === undefined
         ? onCite(selection.citation, selection.sourceAnchor)
-        : onCite({ ...selection.citation, comment });
+        : onCite({ ...selection.citation, comment }, undefined, send);
     if (!inserted) return;
     window.getSelection()?.removeAllRanges();
     dismiss();
@@ -229,7 +234,7 @@ export function AssistantSelectionToolbar({
               className="max-w-40"
               title={phrase}
               disabled={tooLong || phrase.length > ASSISTANT_CITATION_MAX_COMMENT_LENGTH}
-              onClick={() => cite(phrase)}
+              onClick={(event) => cite(phrase, event.ctrlKey || event.metaKey)}
             >
               <span className="truncate">{phrase}</span>
             </Button>
