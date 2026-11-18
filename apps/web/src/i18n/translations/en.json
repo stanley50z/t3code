@@ -12224,8 +12224,9 @@
   "35d9d0d9d584e99b": "Quote quick phrases",
   "cf0dae1a7a469f5a": "Buttons above the composer that send a phrase in one click. One phrase per line.",
   "a55a3fe6921cf01b": "Reset quick phrases to default",
-  "63ee4677663627db": "Buttons in the comment box of a quoted reply that save the phrase as its comment. One phrase per line.",
+  "bd87d54e80faa16a": "Buttons shown on selected assistant text that quote it with the phrase as its comment. One phrase per line.",
   "e6399279e40f051c": "Reset quote quick phrases to default",
   "75e71adec12e50ad": "buttons one click send canned reply preset prompt snippet composer",
-  "ab44cdea5ef13464": "citation quote reply comment buttons one click canned preset"
+  "a436888b41f27805": "citation quote reply comment selection buttons one click canned preset",
+  "554283b020f6cf09": "Selected text actions"
 }

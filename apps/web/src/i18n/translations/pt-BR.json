@@ -12214,8 +12214,9 @@
   "35d9d0d9d584e99b": "Frases rápidas para citações",
   "cf0dae1a7a469f5a": "Botões acima do editor que enviam uma frase com um clique. Uma frase por linha.",
   "a55a3fe6921cf01b": "Redefinir frases rápidas para o padrão",
-  "63ee4677663627db": "Botões na caixa de comentário de uma resposta citada que salvam a frase como comentário. Uma frase por linha.",
+  "bd87d54e80faa16a": "Botões exibidos sobre o texto selecionado do assistente que o citam com a frase como comentário. Uma frase por linha.",
   "e6399279e40f051c": "Redefinir frases rápidas para citações para o padrão",
   "75e71adec12e50ad": "botões um clique enviar resposta pronta modelo prompt trecho editor buttons",
-  "ab44cdea5ef13464": "citação resposta comentário botões um clique pronto modelo citation quote"
+  "a436888b41f27805": "citação resposta comentário botões um clique pronto modelo citation quote seleção",
+  "554283b020f6cf09": "Ações do texto selecionado"
 }

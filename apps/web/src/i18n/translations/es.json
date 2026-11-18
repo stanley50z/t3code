@@ -12210,8 +12210,9 @@
   "35d9d0d9d584e99b": "Frases rápidas para citas",
   "cf0dae1a7a469f5a": "Botones sobre el editor que envían una frase con un clic. Una frase por línea.",
   "a55a3fe6921cf01b": "Restablecer las frases rápidas a los valores predeterminados",
-  "63ee4677663627db": "Botones en el cuadro de comentario de una respuesta citada que guardan la frase como su comentario. Una frase por línea.",
+  "bd87d54e80faa16a": "Botones que aparecen sobre el texto seleccionado del asistente y lo citan con la frase como comentario. Una frase por línea.",
   "e6399279e40f051c": "Restablecer las frases rápidas para citas a los valores predeterminados",
   "75e71adec12e50ad": "botones un clic enviar respuesta predefinida plantilla prompt fragmento editor buttons",
-  "ab44cdea5ef13464": "cita respuesta comentario botones un clic predefinido plantilla citation quote"
+  "a436888b41f27805": "cita respuesta comentario botones un clic predefinido plantilla citation quote selección",
+  "554283b020f6cf09": "Acciones del texto seleccionado"
 }

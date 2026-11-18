@@ -809,7 +809,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     id: "citation-quick-phrases",
     title: msg("Quote quick phrases"),
     to: "/settings/chat",
-    searchTerms: [msg("citation quote reply comment buttons one click canned preset")],
+    searchTerms: [msg("citation quote reply comment selection buttons one click canned preset")],
   },
   {
     id: "follow-up-behavior",
